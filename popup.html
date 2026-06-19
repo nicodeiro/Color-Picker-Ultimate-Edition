@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,7 @@
                             <line x1="14" y1="1" x2="14" y2="4"></line>
                         </svg>
                     </button>
-                    <button class="icon-btn settings-trigger" type="button" title="Settings">
+                    <button class="icon-btn settings-trigger" type="button" title="Settings" data-i18n-title="settings">
                         <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3.17 14H3a2 2 0 0 1 0-4h.17A1.65 1.65 0 0 0 4.68 8.98a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82A1.65 1.65 0 0 0 20.83 10H21a2 2 0 0 1 0 4h-.17A1.65 1.65 0 0 0 19.4 15z"></path>
@@ -36,7 +36,7 @@
             </header>
 
             <main class="capture-main">
-                <button id="pick-btn" class="capture-button" type="button" aria-label="Pick color">
+                <button id="pick-btn" class="capture-button" type="button" aria-label="Pick color" data-i18n-aria-label="pickColor">
                     <span class="capture-ring"></span>
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="78" height="78" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m2 22 1-1h3l9-9"></path>
@@ -67,7 +67,7 @@
 
         <section id="details-view" class="view details-view hidden" aria-hidden="true">
             <header class="app-header details-header">
-                <button id="back-btn" class="back-btn" type="button" aria-label="Back">
+                <button id="back-btn" class="back-btn" type="button" aria-label="Back" data-i18n-aria-label="back">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"></path>
                     </svg>
@@ -83,7 +83,7 @@
                             <line x1="14" y1="1" x2="14" y2="4"></line>
                         </svg>
                     </button>
-                    <button class="icon-btn settings-trigger" type="button" title="Settings">
+                    <button class="icon-btn settings-trigger" type="button" title="Settings" data-i18n-title="settings">
                         <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3.17 14H3a2 2 0 0 1 0-4h.17A1.65 1.65 0 0 0 4.68 8.98a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82A1.65 1.65 0 0 0 20.83 10H21a2 2 0 0 1 0 4h-.17A1.65 1.65 0 0 0 19.4 15z"></path>
@@ -99,7 +99,7 @@
                         <h2 id="color-name">Royal Blue</h2>
                         <div class="hero-hex-row">
                             <span id="hex-value">#2563EB</span>
-                            <button class="hero-copy-btn copy-action" type="button" data-copy-kind="hex" title="Copy HEX">
+                            <button class="hero-copy-btn copy-action" type="button" data-copy-kind="hex" title="Copy HEX" data-i18n-title="copyHex">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -107,8 +107,8 @@
                             </button>
                         </div>
                         <div class="code-block">
-                            <p>Code</p>
-                            <div class="code-tabs" role="tablist" aria-label="Code format">
+                            <p data-i18n="code">Code</p>
+                            <div class="code-tabs" role="tablist" aria-label="Code format" data-i18n-aria-label="codeFormat">
                                 <button class="code-tab active" type="button" data-code-format="css">CSS</button>
                                 <button class="code-tab" type="button" data-code-format="tailwind">Tailwind</button>
                                 <button class="code-tab" type="button" data-code-format="swiftui">SwiftUI</button>
@@ -116,7 +116,7 @@
                             </div>
                             <div class="code-output-row">
                                 <code id="code-output">--color-primary: #2563EB;</code>
-                                <button class="code-copy-btn copy-action" type="button" data-copy-kind="code" title="Copy code">
+                                <button class="code-copy-btn copy-action" type="button" data-copy-kind="code" title="Copy code" data-i18n-title="copyCode">
                                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -130,7 +130,7 @@
                 <section class="detail-grid">
                     <article class="detail-card usage-card">
                         <h2 data-i18n="usage">Usage</h2>
-                        <input id="usage-input" type="text" value="Blabla" aria-label="Preview text">
+                        <input id="usage-input" type="text" value="Blabla" aria-label="Preview text" data-i18n-aria-label="previewText">
                         <div id="usage-button" class="usage-button">Blabla</div>
                         <div id="usage-text" class="usage-text">Blabla</div>
                     </article>
@@ -177,7 +177,7 @@
                 <section class="history-card-section">
                     <div class="section-title-row">
                         <h2 data-i18n="history">Historique</h2>
-                        <div class="history-filter" role="tablist" aria-label="Color collection">
+                        <div class="history-filter" role="tablist" aria-label="Color collection" data-i18n-aria-label="colorCollection">
                             <button id="history-tab" class="history-filter-tab active" type="button" role="tab" aria-selected="true" data-collection="history" data-i18n="history">Historique</button>
                             <button id="favorites-tab" class="history-filter-tab" type="button" role="tab" aria-selected="false" data-collection="favorites" data-i18n="favorites">Favoris</button>
                         </div>
@@ -196,7 +196,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 data-i18n="settings">Settings</h2>
-                <button id="close-settings" class="close-btn" type="button" aria-label="Close settings">
+                <button id="close-settings" class="close-btn" type="button" aria-label="Close settings" data-i18n-aria-label="closeSettings">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -224,12 +224,6 @@
                             <option value="system" data-i18n="system">System</option>
                             <option value="light" data-i18n="light">Light</option>
                             <option value="dark" data-i18n="dark">Dark</option>
-                            <option value="midnight" data-i18n="midnight">Midnight</option>
-                            <option value="latte" data-i18n="latte">Latte</option>
-                            <option value="forest" data-i18n="forest">Forest</option>
-                            <option value="neon" data-i18n="neon">Neon</option>
-                            <option value="rose" data-i18n="rose">Rose</option>
-                            <option value="custom" data-i18n="custom">Custom</option>
                         </select>
                     </div>
                 </div>
@@ -263,7 +257,7 @@
                             <line x1="14" y1="1" x2="14" y2="4"></line>
                         </svg>
                     </span>
-                    <span>Support free tools</span>
+                    <span data-i18n="supportFreeTools">Support free tools</span>
                     <span class="chevron">›</span>
                 </a>
             </div>

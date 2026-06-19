@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_COLOR = '#2563EB';
     const DEFAULT_HISTORY = ['#2563EB', '#7C3AED', '#FF3B5F', '#FF7A1A', '#10B981', '#06B6D4', '#F9AB00', '#111827', '#CBD5E1', '#EDE9FE'];
     const MAX_HISTORY = 10;
+    const VALID_THEMES = ['system', 'light', 'dark'];
     const defaultSettings = {
         language: 'fr',
         theme: 'system',
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const translations = {
         en: {
+            pageTitle: 'Color Picker : Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ More free tools? Check out bitek.fr ✨',
             settings: 'Settings',
@@ -103,9 +105,34 @@ document.addEventListener('DOMContentLoaded', () => {
             noFavorites: 'No favorite colors yet',
             copiedChip: 'Copied',
             copied: 'Copied!',
-            error: 'Error picking color'
+            error: 'Error picking color',
+            code: 'Code',
+            supportFreeTools: 'Support free tools',
+            pickColor: 'Pick color',
+            back: 'Back',
+            copyHex: 'Copy HEX',
+            copyCode: 'Copy code',
+            codeFormat: 'Code format',
+            previewText: 'Preview text',
+            colorCollection: 'Color collection',
+            closeSettings: 'Close settings',
+            addFavorite: 'Add to favorites',
+            removeFavorite: 'Remove from favorites',
+            colorNames: {
+                '#2563EB': 'Royal Blue',
+                '#7C3AED': 'Electric Purple',
+                '#FF3B5F': 'Coral Red',
+                '#FF7A1A': 'Signal Orange',
+                '#10B981': 'Emerald',
+                '#06B6D4': 'Cyan',
+                '#F9AB00': 'Amber',
+                '#111827': 'Ink',
+                '#CBD5E1': 'Slate Mist',
+                '#EDE9FE': 'Soft Lavender'
+            }
         },
         fr: {
+            pageTitle: 'Color Picker : Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ Plus d\'outils gratuits ? C\'est par ici bitek.fr ✨',
             settings: 'Paramètres',
@@ -135,7 +162,373 @@ document.addEventListener('DOMContentLoaded', () => {
             noFavorites: 'Aucun favori pour le moment',
             copiedChip: 'Copié',
             copied: 'Copié !',
-            error: 'Erreur lors de la sélection'
+            error: 'Erreur lors de la sélection',
+            code: 'Code',
+            supportFreeTools: 'Soutenir les outils gratuits',
+            pickColor: 'Choisir une couleur',
+            back: 'Retour',
+            copyHex: 'Copier le HEX',
+            copyCode: 'Copier le code',
+            codeFormat: 'Format du code',
+            previewText: 'Texte d\'aperçu',
+            colorCollection: 'Collection de couleurs',
+            closeSettings: 'Fermer les paramètres',
+            addFavorite: 'Ajouter aux favoris',
+            removeFavorite: 'Retirer des favoris',
+            colorNames: {
+                '#2563EB': 'Bleu royal',
+                '#7C3AED': 'Violet électrique',
+                '#FF3B5F': 'Rouge corail',
+                '#FF7A1A': 'Orange signal',
+                '#10B981': 'Émeraude',
+                '#06B6D4': 'Cyan',
+                '#F9AB00': 'Ambre',
+                '#111827': 'Encre',
+                '#CBD5E1': 'Brume ardoise',
+                '#EDE9FE': 'Lavande douce'
+            }
+        },
+        es: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ ¿Más herramientas gratis? Visita bitek.fr ✨',
+            settings: 'Configuración',
+            language: 'Idioma',
+            theme: 'Tema',
+            system: 'Sistema',
+            light: 'Claro',
+            dark: 'Oscuro',
+            midnight: 'Medianoche',
+            latte: 'Latte',
+            forest: 'Bosque',
+            neon: 'Neón',
+            rose: 'Rosa',
+            custom: 'Personalizado',
+            bgColor: 'Fondo',
+            cardColor: 'Tarjeta',
+            textColor: 'Texto',
+            accentColor: 'Acento',
+            buyCoffee: 'Invítame a un café',
+            captureCta: 'Elige un color en pantalla',
+            pickingCta: 'Selecciona un color en pantalla',
+            detailsTitle: 'Últimos detalles',
+            history: 'Historial',
+            usage: 'Uso',
+            formats: 'Formatos',
+            favorites: 'Favoritos',
+            noFavorites: 'Aún no hay colores favoritos',
+            copiedChip: 'Copiado',
+            copied: '¡Copiado!',
+            error: 'Error al elegir el color',
+            code: 'Código',
+            supportFreeTools: 'Apoyar herramientas gratis',
+            pickColor: 'Elegir color',
+            back: 'Volver',
+            copyHex: 'Copiar HEX',
+            copyCode: 'Copiar código',
+            codeFormat: 'Formato de código',
+            previewText: 'Texto de vista previa',
+            colorCollection: 'Colección de colores',
+            closeSettings: 'Cerrar configuración',
+            addFavorite: 'Añadir a favoritos',
+            removeFavorite: 'Quitar de favoritos',
+            colorNames: {
+                '#2563EB': 'Azul real',
+                '#7C3AED': 'Morado eléctrico',
+                '#FF3B5F': 'Rojo coral',
+                '#FF7A1A': 'Naranja señal',
+                '#10B981': 'Esmeralda',
+                '#06B6D4': 'Cian',
+                '#F9AB00': 'Ámbar',
+                '#111827': 'Tinta',
+                '#CBD5E1': 'Niebla pizarra',
+                '#EDE9FE': 'Lavanda suave'
+            }
+        },
+        de: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ Mehr kostenlose Tools? Schau auf bitek.fr vorbei ✨',
+            settings: 'Einstellungen',
+            language: 'Sprache',
+            theme: 'Design',
+            system: 'System',
+            light: 'Hell',
+            dark: 'Dunkel',
+            midnight: 'Mitternacht',
+            latte: 'Latte',
+            forest: 'Wald',
+            neon: 'Neon',
+            rose: 'Rose',
+            custom: 'Benutzerdefiniert',
+            bgColor: 'Hintergrund',
+            cardColor: 'Karte',
+            textColor: 'Text',
+            accentColor: 'Akzent',
+            buyCoffee: 'Spendiere mir einen Kaffee',
+            captureCta: 'Farbe auf dem Bildschirm wählen',
+            pickingCta: 'Wähle eine Farbe auf dem Bildschirm',
+            detailsTitle: 'Letzte Details',
+            history: 'Verlauf',
+            usage: 'Verwendung',
+            formats: 'Formate',
+            favorites: 'Favoriten',
+            noFavorites: 'Noch keine Lieblingsfarben',
+            copiedChip: 'Kopiert',
+            copied: 'Kopiert!',
+            error: 'Fehler beim Auswählen der Farbe',
+            code: 'Code',
+            supportFreeTools: 'Kostenlose Tools unterstützen',
+            pickColor: 'Farbe wählen',
+            back: 'Zurück',
+            copyHex: 'HEX kopieren',
+            copyCode: 'Code kopieren',
+            codeFormat: 'Codeformat',
+            previewText: 'Vorschautext',
+            colorCollection: 'Farbsammlung',
+            closeSettings: 'Einstellungen schließen',
+            addFavorite: 'Zu Favoriten hinzufügen',
+            removeFavorite: 'Aus Favoriten entfernen',
+            colorNames: {
+                '#2563EB': 'Königsblau',
+                '#7C3AED': 'Elektrisches Violett',
+                '#FF3B5F': 'Korallenrot',
+                '#FF7A1A': 'Signalorange',
+                '#10B981': 'Smaragd',
+                '#06B6D4': 'Cyan',
+                '#F9AB00': 'Bernstein',
+                '#111827': 'Tinte',
+                '#CBD5E1': 'Schiefernebel',
+                '#EDE9FE': 'Sanftes Lavendel'
+            }
+        },
+        pt: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ Mais ferramentas grátis? Confira bitek.fr ✨',
+            settings: 'Configurações',
+            language: 'Idioma',
+            theme: 'Tema',
+            system: 'Sistema',
+            light: 'Claro',
+            dark: 'Escuro',
+            midnight: 'Meia-noite',
+            latte: 'Latte',
+            forest: 'Floresta',
+            neon: 'Neon',
+            rose: 'Rosa',
+            custom: 'Personalizado',
+            bgColor: 'Fundo',
+            cardColor: 'Cartão',
+            textColor: 'Texto',
+            accentColor: 'Destaque',
+            buyCoffee: 'Pague-me um café',
+            captureCta: 'Escolha uma cor na tela',
+            pickingCta: 'Selecione uma cor na tela',
+            detailsTitle: 'Últimos detalhes',
+            history: 'Histórico',
+            usage: 'Uso',
+            formats: 'Formatos',
+            favorites: 'Favoritos',
+            noFavorites: 'Ainda sem cores favoritas',
+            copiedChip: 'Copiado',
+            copied: 'Copiado!',
+            error: 'Erro ao escolher a cor',
+            code: 'Código',
+            supportFreeTools: 'Apoiar ferramentas grátis',
+            pickColor: 'Escolher cor',
+            back: 'Voltar',
+            copyHex: 'Copiar HEX',
+            copyCode: 'Copiar código',
+            codeFormat: 'Formato do código',
+            previewText: 'Texto de pré-visualização',
+            colorCollection: 'Coleção de cores',
+            closeSettings: 'Fechar configurações',
+            addFavorite: 'Adicionar aos favoritos',
+            removeFavorite: 'Remover dos favoritos',
+            colorNames: {
+                '#2563EB': 'Azul real',
+                '#7C3AED': 'Roxo elétrico',
+                '#FF3B5F': 'Vermelho coral',
+                '#FF7A1A': 'Laranja sinal',
+                '#10B981': 'Esmeralda',
+                '#06B6D4': 'Ciano',
+                '#F9AB00': 'Âmbar',
+                '#111827': 'Tinta',
+                '#CBD5E1': 'Névoa ardósia',
+                '#EDE9FE': 'Lavanda suave'
+            }
+        },
+        zh: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ 想要更多免费工具？请访问 bitek.fr ✨',
+            settings: '设置',
+            language: '语言',
+            theme: '主题',
+            system: '系统',
+            light: '浅色',
+            dark: '深色',
+            midnight: '午夜',
+            latte: '拿铁',
+            forest: '森林',
+            neon: '霓虹',
+            rose: '玫瑰',
+            custom: '自定义',
+            bgColor: '背景',
+            cardColor: '卡片',
+            textColor: '文字',
+            accentColor: '强调色',
+            buyCoffee: '请我喝咖啡',
+            captureCta: '在屏幕上选择颜色',
+            pickingCta: '请在屏幕上选择颜色',
+            detailsTitle: '最新详情',
+            history: '历史',
+            usage: '用法',
+            formats: '格式',
+            favorites: '收藏',
+            noFavorites: '还没有收藏颜色',
+            copiedChip: '已复制',
+            copied: '已复制！',
+            error: '取色出错',
+            code: '代码',
+            supportFreeTools: '支持免费工具',
+            pickColor: '选择颜色',
+            back: '返回',
+            copyHex: '复制 HEX',
+            copyCode: '复制代码',
+            codeFormat: '代码格式',
+            previewText: '预览文本',
+            colorCollection: '颜色集合',
+            closeSettings: '关闭设置',
+            addFavorite: '添加到收藏',
+            removeFavorite: '从收藏中移除',
+            colorNames: {
+                '#2563EB': '皇家蓝',
+                '#7C3AED': '电光紫',
+                '#FF3B5F': '珊瑚红',
+                '#FF7A1A': '信号橙',
+                '#10B981': '祖母绿',
+                '#06B6D4': '青色',
+                '#F9AB00': '琥珀色',
+                '#111827': '墨色',
+                '#CBD5E1': '石板雾',
+                '#EDE9FE': '柔和薰衣草'
+            }
+        },
+        ja: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ 無料ツールをもっと見るなら bitek.fr ✨',
+            settings: '設定',
+            language: '言語',
+            theme: 'テーマ',
+            system: 'システム',
+            light: 'ライト',
+            dark: 'ダーク',
+            midnight: 'ミッドナイト',
+            latte: 'ラテ',
+            forest: 'フォレスト',
+            neon: 'ネオン',
+            rose: 'ローズ',
+            custom: 'カスタム',
+            bgColor: '背景',
+            cardColor: 'カード',
+            textColor: 'テキスト',
+            accentColor: 'アクセント',
+            buyCoffee: 'コーヒーをおごる',
+            captureCta: '画面上の色を選択',
+            pickingCta: '画面上の色を選択してください',
+            detailsTitle: '最新の詳細',
+            history: '履歴',
+            usage: '使用例',
+            formats: '形式',
+            favorites: 'お気に入り',
+            noFavorites: 'お気に入りの色はまだありません',
+            copiedChip: 'コピー済み',
+            copied: 'コピーしました！',
+            error: '色の取得中にエラーが発生しました',
+            code: 'コード',
+            supportFreeTools: '無料ツールを支援',
+            pickColor: '色を選択',
+            back: '戻る',
+            copyHex: 'HEX をコピー',
+            copyCode: 'コードをコピー',
+            codeFormat: 'コード形式',
+            previewText: 'プレビューテキスト',
+            colorCollection: 'カラーコレクション',
+            closeSettings: '設定を閉じる',
+            addFavorite: 'お気に入りに追加',
+            removeFavorite: 'お気に入りから削除',
+            colorNames: {
+                '#2563EB': 'ロイヤルブルー',
+                '#7C3AED': 'エレクトリックパープル',
+                '#FF3B5F': 'コーラルレッド',
+                '#FF7A1A': 'シグナルオレンジ',
+                '#10B981': 'エメラルド',
+                '#06B6D4': 'シアン',
+                '#F9AB00': 'アンバー',
+                '#111827': 'インク',
+                '#CBD5E1': 'スレートミスト',
+                '#EDE9FE': 'ソフトラベンダー'
+            }
+        },
+        ru: {
+            pageTitle: 'Color Picker : Ultimate Edition',
+            title: 'Color Picker',
+            promo: '✨ Больше бесплатных инструментов? Загляните на bitek.fr ✨',
+            settings: 'Настройки',
+            language: 'Язык',
+            theme: 'Тема',
+            system: 'Системная',
+            light: 'Светлая',
+            dark: 'Темная',
+            midnight: 'Полночь',
+            latte: 'Латте',
+            forest: 'Лес',
+            neon: 'Неон',
+            rose: 'Роза',
+            custom: 'Своя',
+            bgColor: 'Фон',
+            cardColor: 'Карточка',
+            textColor: 'Текст',
+            accentColor: 'Акцент',
+            buyCoffee: 'Купить мне кофе',
+            captureCta: 'Выберите цвет на экране',
+            pickingCta: 'Выберите цвет на экране',
+            detailsTitle: 'Последние детали',
+            history: 'История',
+            usage: 'Пример',
+            formats: 'Форматы',
+            favorites: 'Избранное',
+            noFavorites: 'Избранных цветов пока нет',
+            copiedChip: 'Скопировано',
+            copied: 'Скопировано!',
+            error: 'Ошибка выбора цвета',
+            code: 'Код',
+            supportFreeTools: 'Поддержать бесплатные инструменты',
+            pickColor: 'Выбрать цвет',
+            back: 'Назад',
+            copyHex: 'Копировать HEX',
+            copyCode: 'Копировать код',
+            codeFormat: 'Формат кода',
+            previewText: 'Текст предпросмотра',
+            colorCollection: 'Коллекция цветов',
+            closeSettings: 'Закрыть настройки',
+            addFavorite: 'Добавить в избранное',
+            removeFavorite: 'Удалить из избранного',
+            colorNames: {
+                '#2563EB': 'Королевский синий',
+                '#7C3AED': 'Электрический фиолетовый',
+                '#FF3B5F': 'Кораллово-красный',
+                '#FF7A1A': 'Сигнальный оранжевый',
+                '#10B981': 'Изумрудный',
+                '#06B6D4': 'Циан',
+                '#F9AB00': 'Янтарный',
+                '#111827': 'Чернила',
+                '#CBD5E1': 'Сланцевый туман',
+                '#EDE9FE': 'Мягкая лаванда'
+            }
         }
     };
 
@@ -179,6 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settings.language = event.target.value;
             saveSettings();
             applyTranslations();
+            refreshLocalizedDynamicText();
         });
 
         els.themeSelect.addEventListener('change', (event) => {
@@ -356,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const favoriteButton = document.createElement('button');
             favoriteButton.type = 'button';
             favoriteButton.className = `favorite-toggle${isFavorite ? ' active' : ''}`;
-            favoriteButton.setAttribute('aria-label', isFavorite ? 'Remove from favorites' : 'Add to favorites');
+            favoriteButton.setAttribute('aria-label', isFavorite ? t('removeFavorite') : t('addFavorite'));
             favoriteButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.8 22 9.3 16.7 13.9 18.4 21 12 17.2 5.6 21 7.3 13.9 2 9.3 9 8.8 12 2"></polygon></svg>';
 
             colorButton.append(swatch, label);
@@ -458,8 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateSettings(candidate) {
         if (!candidate || typeof candidate !== 'object') return false;
         if (candidate.language && !translations[candidate.language]) return false;
-        const validThemes = ['system', 'light', 'dark', 'midnight', 'latte', 'forest', 'neon', 'rose', 'custom'];
-        if (candidate.theme && !validThemes.includes(candidate.theme)) return false;
+        if (candidate.theme && !VALID_THEMES.includes(candidate.theme)) return false;
         return true;
     }
 
@@ -469,6 +862,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applySettings() {
         els.languageSelect.value = translations[settings.language] ? settings.language : 'fr';
+        if (!VALID_THEMES.includes(settings.theme)) {
+            settings.theme = defaultSettings.theme;
+            saveSettings();
+        }
         els.themeSelect.value = settings.theme;
 
         let themeToApply = settings.theme;
@@ -518,6 +915,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyTranslations() {
+        document.documentElement.lang = currentLanguage();
+        document.title = t('pageTitle');
+
         document.querySelectorAll('[data-i18n]').forEach((element) => {
             const key = element.dataset.i18n;
             const value = t(key);
@@ -531,11 +931,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-i18n-title]').forEach((element) => {
             element.title = t(element.dataset.i18nTitle);
         });
+
+        document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
+            element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel));
+        });
     }
 
     function t(key) {
-        const lang = translations[settings.language] ? settings.language : 'fr';
+        const lang = currentLanguage();
         return translations[lang][key] || translations.fr[key] || translations.en[key] || key;
+    }
+
+    function currentLanguage() {
+        return translations[settings.language] ? settings.language : 'fr';
+    }
+
+    function refreshLocalizedDynamicText() {
+        els.colorName.textContent = getColorName(currentColor);
+        if (isPicking) {
+            els.captureTitle.textContent = t('pickingCta');
+        } else {
+            els.captureTitle.textContent = t('captureCta');
+        }
+        renderHistory();
     }
 
     function renderPromoLink(element, text) {
@@ -613,18 +1031,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getColorName(hex) {
-        const names = {
-            '#2563EB': 'Royal Blue',
-            '#7C3AED': 'Electric Purple',
-            '#FF3B5F': 'Coral Red',
-            '#FF7A1A': 'Signal Orange',
-            '#10B981': 'Emerald',
-            '#06B6D4': 'Cyan',
-            '#F9AB00': 'Amber',
-            '#111827': 'Ink',
-            '#CBD5E1': 'Slate Mist',
-            '#EDE9FE': 'Soft Lavender'
-        };
-        return names[hex.toUpperCase()] || hex.toUpperCase();
+        const normalized = hex.toUpperCase();
+        return translations[currentLanguage()].colorNames?.[normalized]
+            || translations.fr.colorNames?.[normalized]
+            || translations.en.colorNames?.[normalized]
+            || normalized;
     }
 });
