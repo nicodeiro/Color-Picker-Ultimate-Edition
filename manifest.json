@@ -4,7 +4,6 @@
     "version": "1.0.0",
     "description": "🎨 Pick any color from any webpage! Eyedropper tool with color history, HEX/RGB/HSL codes. Fast, beautiful & privacy-first.",
     "permissions": [
-        "activeTab",
         "storage"
     ],
     "action": {
