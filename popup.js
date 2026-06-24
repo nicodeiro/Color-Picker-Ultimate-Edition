@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hsl = hexToHsl(currentColor);
         const oklch = currentColor === DEFAULT_COLOR ? '0.62, 0.16, 250' : hexToOklch(currentColor);
 
-        els.colorName.textContent = getColorName(currentColor);
+        els.colorName.textContent = 'sRGB';
         els.hexValue.textContent = currentColor;
         els.formatHex.textContent = currentColor;
         els.rgbValue.textContent = rgb;

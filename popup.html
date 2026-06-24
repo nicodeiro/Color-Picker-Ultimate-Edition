@@ -96,9 +96,8 @@
                 <section class="detail-hero">
                     <div id="hero-swatch" class="hero-swatch"></div>
                     <div class="hero-content">
-                        <h2 id="color-name">Royal Blue</h2>
                         <div class="hero-hex-row">
-                            <span id="hex-value">#2563EB</span>
+                            <h2 id="hex-value">#2563EB</h2>
                             <button class="hero-copy-btn copy-action" type="button" data-copy-kind="hex" title="Copy HEX" data-i18n-title="copyHex">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2"></rect>
@@ -106,32 +105,17 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="code-block">
-                            <p data-i18n="code">Code</p>
-                            <div class="code-tabs" role="tablist" aria-label="Code format" data-i18n-aria-label="codeFormat">
-                                <button class="code-tab active" type="button" data-code-format="css">CSS</button>
-                                <button class="code-tab" type="button" data-code-format="tailwind">Tailwind</button>
-                                <button class="code-tab" type="button" data-code-format="swiftui">SwiftUI</button>
-                                <button class="code-tab" type="button" data-code-format="react">React</button>
-                            </div>
-                            <div class="code-output-row">
-                                <code id="code-output">--color-primary: #2563EB;</code>
-                                <button class="code-copy-btn copy-action" type="button" data-copy-kind="code" title="Copy code" data-i18n-title="copyCode">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
+                        <p id="color-name" class="hero-color-space">sRGB</p>
                     </div>
                 </section>
 
                 <section class="detail-grid">
                     <article class="detail-card usage-card">
                         <h2 data-i18n="usage">Usage</h2>
-                        <input id="usage-input" type="text" value="Blabla" aria-label="Preview text" data-i18n-aria-label="previewText">
-                        <div id="usage-button" class="usage-button">Blabla</div>
+                        <div class="usage-preview-row">
+                            <input id="usage-input" type="text" value="Blabla" aria-label="Preview text" data-i18n-aria-label="previewText">
+                            <div id="usage-button" class="usage-button">Blabla</div>
+                        </div>
                         <div id="usage-text" class="usage-text">Blabla</div>
                     </article>
 
@@ -170,6 +154,27 @@
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
                             </button>
+                        </div>
+                    </article>
+
+                    <article class="detail-card code-card">
+                        <h2 data-i18n="code">Code</h2>
+                        <div class="code-block">
+                            <div class="code-tabs" role="tablist" aria-label="Code format" data-i18n-aria-label="codeFormat">
+                                <button class="code-tab active" type="button" data-code-format="css">CSS</button>
+                                <button class="code-tab" type="button" data-code-format="tailwind">Tailwind</button>
+                                <button class="code-tab" type="button" data-code-format="swiftui">SwiftUI</button>
+                                <button class="code-tab" type="button" data-code-format="react">React</button>
+                            </div>
+                            <div class="code-output-row">
+                                <code id="code-output">--color-primary: #2563EB;</code>
+                                <button class="code-copy-btn copy-action" type="button" data-copy-kind="code" title="Copy code" data-i18n-title="copyCode">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </article>
                 </section>
