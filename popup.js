@@ -549,8 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
         els.backBtn.addEventListener('click', () => showView('capture'));
         els.usageInput.addEventListener('input', syncUsagePreview);
 
-        [els.historyTab, els.favoritesTab].forEach((button) => {
-            button.addEventListener('click', () => setCollection(button.dataset.collection));
+        els.historyTab.addEventListener('click', () => setCollection('history'));
+        els.favoritesTab.addEventListener('click', () => {
+            setCollection(currentCollection === 'favorites' ? 'history' : 'favorites');
         });
 
         document.querySelectorAll('.settings-trigger').forEach((button) => {
@@ -680,8 +681,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function syncUsagePreview() {
-        const value = els.usageInput.value.trim() || 'Blabla';
-        els.usageButton.textContent = value;
+        const value = els.usageInput.value.trim() || 'Texte';
+        els.usageButton.textContent = 'Bouton';
         els.usageText.textContent = value;
     }
 
