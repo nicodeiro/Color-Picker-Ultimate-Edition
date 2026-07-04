@@ -545,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function bindEvents() {
         els.pickBtn.addEventListener('click', pickColor);
+        els.heroSwatch.addEventListener('click', pickColor);
         els.historyOpenBtn.addEventListener('click', () => showView('details'));
         els.backBtn.addEventListener('click', () => showView('capture'));
         els.usageInput.addEventListener('input', syncUsagePreview);
@@ -633,7 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function enterPickingState() {
         isPicking = true;
         els.pickBtn.classList.remove('picked-success');
+        els.heroSwatch.classList.remove('picked-success');
         els.pickBtn.classList.add('is-picking');
+        els.heroSwatch.classList.add('is-picking');
         els.captureTitle.textContent = t('pickingCta');
         els.captureFeedback.classList.add('hidden');
     }
@@ -641,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function exitPickingState() {
         isPicking = false;
         els.pickBtn.classList.remove('is-picking');
+        els.heroSwatch.classList.remove('is-picking');
         els.captureTitle.textContent = t('captureCta');
     }
 
@@ -649,8 +653,10 @@ document.addEventListener('DOMContentLoaded', () => {
         els.captureFeedback.textContent = `${hex} ${t('copied').replace('!', '').trim()}`;
         els.captureFeedback.classList.remove('hidden');
         els.pickBtn.classList.add('picked-success');
+        els.heroSwatch.classList.add('picked-success');
         await wait(360);
         els.pickBtn.classList.remove('picked-success');
+        els.heroSwatch.classList.remove('picked-success');
         els.captureFeedback.classList.add('hidden');
     }
 

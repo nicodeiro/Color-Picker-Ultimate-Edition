@@ -438,23 +438,113 @@ a {
 }
 
 .hero-swatch {
-    width: 96px;
-    height: 96px;
+    width: 106px;
+    height: 106px;
     border-radius: 50%;
-    background:
-        radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--selected-color) 88%, #ffffff), var(--selected-color) 72%, color-mix(in srgb, var(--selected-color) 88%, #000000));
-    border: 1px solid rgba(203, 213, 225, 0.72);
-    box-shadow:
-        0 0 0 6px rgba(255, 255, 255, 0.96),
-        0 0 0 7px rgba(226, 232, 240, 0.7),
-        0 12px 24px rgba(15, 23, 42, 0.08),
-        inset 0 1px 1px rgba(255, 255, 255, 0.18);
+    display: block;
     position: relative;
-    overflow: hidden;
+    flex: 0 0 auto;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    overflow: visible;
+    transition: transform 0.22s ease, filter 0.22s ease;
+}
+
+.hero-swatch::before,
+.hero-swatch::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero-swatch::before {
+    inset: -3px;
+    background:
+        conic-gradient(
+            from 24deg,
+            rgba(255, 255, 255, 0.08),
+            rgba(96, 165, 250, 0.78),
+            rgba(34, 211, 238, 0.74),
+            rgba(168, 85, 247, 0.68),
+            rgba(255, 255, 255, 0.9),
+            rgba(59, 130, 246, 0.72),
+            rgba(255, 255, 255, 0.08)
+        );
+    filter: blur(0.2px);
+    opacity: 0.72;
+    animation: hero-siri-ring 5.2s linear infinite;
+    -webkit-mask: radial-gradient(circle, transparent 64%, #000 66%, #000 71%, transparent 73%);
+    mask: radial-gradient(circle, transparent 64%, #000 66%, #000 71%, transparent 73%);
 }
 
 .hero-swatch::after {
-    display: none;
+    inset: 4px;
+    border: 6px solid rgba(255, 255, 255, 0.96);
+    box-shadow:
+        0 0 0 1px rgba(226, 232, 240, 0.72),
+        0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.hero-swatch-fill {
+    position: absolute;
+    inset: 11px;
+    z-index: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--selected-color) 88%, #ffffff), var(--selected-color) 72%, color-mix(in srgb, var(--selected-color) 88%, #000000));
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -1px 1px rgba(15, 23, 42, 0.12);
+}
+
+.hero-swatch:hover,
+.hero-swatch:focus-visible {
+    filter: saturate(1.04);
+}
+
+.hero-swatch:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--selected-color) 68%, #ffffff);
+    outline-offset: 8px;
+}
+
+.hero-swatch:active {
+    transform: scale(0.985);
+}
+
+.hero-swatch.is-picking {
+    animation: intelligence-breathe 1.8s ease-in-out infinite;
+}
+
+.hero-swatch.is-picking::before {
+    inset: -6px;
+    opacity: 1;
+    animation-duration: 1.15s;
+    filter: blur(0.35px) saturate(1.24);
+}
+
+.hero-swatch.picked-success {
+    animation: picked-success 360ms ease-out;
+}
+
+@keyframes hero-siri-ring {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-swatch::before {
+        animation: none;
+    }
+
+    .hero-swatch.is-picking,
+    .hero-swatch.picked-success {
+        animation: none;
+    }
 }
 
 .hero-content {
