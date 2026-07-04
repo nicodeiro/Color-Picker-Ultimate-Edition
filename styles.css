@@ -814,17 +814,17 @@ a {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 4px 12px 8px 2px;
+    padding: 5px 14px 9px 6px;
 }
 
 .history-row {
     min-width: 0;
     display: block;
-    margin: -4px -12px -8px -2px;
+    margin: -5px -14px -9px -6px;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
-    scroll-padding-inline: 2px 12px;
+    scroll-padding-inline: 6px 14px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
 }
@@ -852,8 +852,7 @@ a {
     border-color: var(--selected-color);
     box-shadow:
         0 0 0 2px #ffffff,
-        0 0 0 4px color-mix(in srgb, var(--selected-color) 72%, #93c5fd),
-        0 7px 14px color-mix(in srgb, var(--selected-color) 18%, transparent);
+        0 0 0 4px color-mix(in srgb, var(--selected-color) 72%, #93c5fd);
 }
 
 .history-color-button {
