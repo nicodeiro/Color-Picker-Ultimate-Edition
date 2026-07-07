@@ -22,9 +22,113 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_HISTORY = ['#2563EB', '#7C3AED', '#FF3B5F', '#FF7A1A', '#10B981', '#06B6D4', '#F9AB00', '#111827', '#CBD5E1', '#EDE9FE'];
     const MAX_HISTORY = 10;
     const VALID_THEMES = ['system', 'light', 'dark'];
+    const FONT_OPTIONS = [
+        { id: 'american-typewriter', name: 'American Typewriter', category: 'Serif', stack: '"American Typewriter", "Courier New", serif' },
+        { id: 'andale-mono', name: 'Andale Mono', category: 'Mono', stack: '"Andale Mono", "SF Mono", Menlo, monospace' },
+        { id: 'apple-chancery', name: 'Apple Chancery', category: 'Script', stack: '"Apple Chancery", "Snell Roundhand", cursive' },
+        { id: 'arial', name: 'Arial', category: 'Sans', stack: 'Arial, Helvetica, sans-serif' },
+        { id: 'arial-narrow', name: 'Arial Narrow', category: 'Condensed', stack: '"Arial Narrow", Arial, sans-serif' },
+        { id: 'arial-rounded', name: 'Arial Rounded', category: 'Rounded', stack: '"Arial Rounded MT Bold", "SF Pro Rounded", Arial, sans-serif' },
+        { id: 'athelas', name: 'Athelas', category: 'Serif', stack: 'Athelas, Georgia, serif' },
+        { id: 'avenir', name: 'Avenir', category: 'Sans', stack: 'Avenir, "Avenir Next", "Helvetica Neue", sans-serif' },
+        { id: 'display', name: 'Avenir Next', category: 'Sans', stack: '"Avenir Next", Avenir, "Helvetica Neue", sans-serif' },
+        { id: 'baskerville', name: 'Baskerville', category: 'Serif', stack: 'Baskerville, Georgia, serif' },
+        { id: 'big-caslon', name: 'Big Caslon', category: 'Serif', stack: '"Big Caslon", "Times New Roman", serif' },
+        { id: 'bodoni-72', name: 'Bodoni 72', category: 'Serif', stack: '"Bodoni 72", Didot, Georgia, serif' },
+        { id: 'bodoni-72-smallcaps', name: 'Bodoni 72 Smallcaps', category: 'Serif', stack: '"Bodoni 72 Smallcaps", "Bodoni 72", Didot, serif' },
+        { id: 'bradley-hand', name: 'Bradley Hand', category: 'Hand', stack: '"Bradley Hand", "Marker Felt", cursive' },
+        { id: 'brush-script', name: 'Brush Script MT', category: 'Script', stack: '"Brush Script MT", "Snell Roundhand", cursive' },
+        { id: 'cambria', name: 'Cambria', category: 'Serif', stack: 'Cambria, Georgia, serif' },
+        { id: 'candara', name: 'Candara', category: 'Sans', stack: 'Candara, Optima, sans-serif' },
+        { id: 'chalkduster', name: 'Chalkduster', category: 'Display', stack: 'Chalkduster, "Marker Felt", fantasy' },
+        { id: 'charter', name: 'Charter', category: 'Serif', stack: 'Charter, Georgia, serif' },
+        { id: 'cochin', name: 'Cochin', category: 'Serif', stack: 'Cochin, Georgia, serif' },
+        { id: 'constantia', name: 'Constantia', category: 'Serif', stack: 'Constantia, Georgia, serif' },
+        { id: 'copperplate', name: 'Copperplate', category: 'Display', stack: 'Copperplate, "Copperplate Gothic Light", fantasy' },
+        { id: 'courier', name: 'Courier', category: 'Mono', stack: 'Courier, "Courier New", monospace' },
+        { id: 'courier-new', name: 'Courier New', category: 'Mono', stack: '"Courier New", Courier, monospace' },
+        { id: 'damascus', name: 'Damascus', category: 'Sans', stack: 'Damascus, Arial, sans-serif' },
+        { id: 'devanagari-sangam', name: 'Devanagari Sangam MN', category: 'Sans', stack: '"Devanagari Sangam MN", Arial, sans-serif' },
+        { id: 'didot', name: 'Didot', category: 'Serif', stack: 'Didot, "Bodoni 72", Georgia, serif' },
+        { id: 'din-alternate', name: 'DIN Alternate', category: 'Sans', stack: '"DIN Alternate", "Arial Narrow", sans-serif' },
+        { id: 'din-condensed', name: 'DIN Condensed', category: 'Condensed', stack: '"DIN Condensed", "Arial Narrow", sans-serif' },
+        { id: 'euphemia', name: 'Euphemia UCAS', category: 'Sans', stack: '"Euphemia UCAS", Arial, sans-serif' },
+        { id: 'futura', name: 'Futura', category: 'Display', stack: 'Futura, "Avenir Next", sans-serif' },
+        { id: 'galvji', name: 'Galvji', category: 'Sans', stack: 'Galvji, "Helvetica Neue", Arial, sans-serif' },
+        { id: 'garamond', name: 'Garamond', category: 'Serif', stack: 'Garamond, "Times New Roman", serif' },
+        { id: 'geneva', name: 'Geneva', category: 'Sans', stack: 'Geneva, Verdana, sans-serif' },
+        { id: 'serif', name: 'Georgia', category: 'Serif', stack: 'Georgia, "New York", "Times New Roman", serif' },
+        { id: 'gill-sans', name: 'Gill Sans', category: 'Sans', stack: '"Gill Sans", "Gill Sans MT", sans-serif' },
+        { id: 'helvetica', name: 'Helvetica', category: 'Sans', stack: 'Helvetica, "Helvetica Neue", Arial, sans-serif' },
+        { id: 'helvetica-neue', name: 'Helvetica Neue', category: 'Sans', stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+        { id: 'herculanum', name: 'Herculanum', category: 'Display', stack: 'Herculanum, Papyrus, fantasy' },
+        { id: 'hiragino-sans', name: 'Hiragino Sans', category: 'Sans', stack: '"Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif' },
+        { id: 'hoefler-text', name: 'Hoefler Text', category: 'Serif', stack: '"Hoefler Text", Georgia, serif' },
+        { id: 'impact', name: 'Impact', category: 'Display', stack: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' },
+        { id: 'inaimathi', name: 'InaiMathi', category: 'Sans', stack: 'InaiMathi, Arial, sans-serif' },
+        { id: 'iowan-old-style', name: 'Iowan Old Style', category: 'Serif', stack: '"Iowan Old Style", Georgia, serif' },
+        { id: 'kailasa', name: 'Kailasa', category: 'Sans', stack: 'Kailasa, Arial, sans-serif' },
+        { id: 'kannada-sangam', name: 'Kannada Sangam MN', category: 'Sans', stack: '"Kannada Sangam MN", Arial, sans-serif' },
+        { id: 'kefa', name: 'Kefa', category: 'Serif', stack: 'Kefa, Georgia, serif' },
+        { id: 'khmer-sangam', name: 'Khmer Sangam MN', category: 'Sans', stack: '"Khmer Sangam MN", Arial, sans-serif' },
+        { id: 'kohinoor-bangla', name: 'Kohinoor Bangla', category: 'Sans', stack: '"Kohinoor Bangla", Arial, sans-serif' },
+        { id: 'kohinoor-devanagari', name: 'Kohinoor Devanagari', category: 'Sans', stack: '"Kohinoor Devanagari", Arial, sans-serif' },
+        { id: 'kohinoor-gujarati', name: 'Kohinoor Gujarati', category: 'Sans', stack: '"Kohinoor Gujarati", Arial, sans-serif' },
+        { id: 'kohinoor-telugu', name: 'Kohinoor Telugu', category: 'Sans', stack: '"Kohinoor Telugu", Arial, sans-serif' },
+        { id: 'lao-sangam', name: 'Lao Sangam MN', category: 'Sans', stack: '"Lao Sangam MN", Arial, sans-serif' },
+        { id: 'lucida-grande', name: 'Lucida Grande', category: 'Sans', stack: '"Lucida Grande", "Lucida Sans Unicode", sans-serif' },
+        { id: 'luminari', name: 'Luminari', category: 'Display', stack: 'Luminari, fantasy' },
+        { id: 'malayalam-sangam', name: 'Malayalam Sangam MN', category: 'Sans', stack: '"Malayalam Sangam MN", Arial, sans-serif' },
+        { id: 'marker-felt', name: 'Marker Felt', category: 'Hand', stack: '"Marker Felt", "Bradley Hand", fantasy' },
+        { id: 'menlo', name: 'Menlo', category: 'Mono', stack: 'Menlo, Monaco, "SF Mono", monospace' },
+        { id: 'microsoft-sans-serif', name: 'Microsoft Sans Serif', category: 'Sans', stack: '"Microsoft Sans Serif", Arial, sans-serif' },
+        { id: 'monaco', name: 'Monaco', category: 'Mono', stack: 'Monaco, Menlo, "SF Mono", monospace' },
+        { id: 'myanmar-sangam', name: 'Myanmar Sangam MN', category: 'Sans', stack: '"Myanmar Sangam MN", Arial, sans-serif' },
+        { id: 'new-york', name: 'New York', category: 'Serif', stack: '"New York", Georgia, serif' },
+        { id: 'noto-sans', name: 'Noto Sans', category: 'Sans', stack: '"Noto Sans", Arial, sans-serif' },
+        { id: 'noto-serif', name: 'Noto Serif', category: 'Serif', stack: '"Noto Serif", Georgia, serif' },
+        { id: 'noteworthy', name: 'Noteworthy', category: 'Hand', stack: 'Noteworthy, "Bradley Hand", cursive' },
+        { id: 'optima', name: 'Optima', category: 'Sans', stack: 'Optima, Candara, sans-serif' },
+        { id: 'oriya-sangam', name: 'Oriya Sangam MN', category: 'Sans', stack: '"Oriya Sangam MN", Arial, sans-serif' },
+        { id: 'palatino', name: 'Palatino', category: 'Serif', stack: 'Palatino, "Palatino Linotype", serif' },
+        { id: 'papyrus', name: 'Papyrus', category: 'Display', stack: 'Papyrus, fantasy' },
+        { id: 'phosphate', name: 'Phosphate', category: 'Display', stack: 'Phosphate, Impact, fantasy' },
+        { id: 'pingfang-hk', name: 'PingFang HK', category: 'Sans', stack: '"PingFang HK", "Helvetica Neue", sans-serif' },
+        { id: 'pingfang-sc', name: 'PingFang SC', category: 'Sans', stack: '"PingFang SC", "Helvetica Neue", sans-serif' },
+        { id: 'pingfang-tc', name: 'PingFang TC', category: 'Sans', stack: '"PingFang TC", "Helvetica Neue", sans-serif' },
+        { id: 'plantagenet-cherokee', name: 'Plantagenet Cherokee', category: 'Serif', stack: '"Plantagenet Cherokee", Georgia, serif' },
+        { id: 'pt-mono', name: 'PT Mono', category: 'Mono', stack: '"PT Mono", "SF Mono", Menlo, monospace' },
+        { id: 'pt-sans', name: 'PT Sans', category: 'Sans', stack: '"PT Sans", Arial, sans-serif' },
+        { id: 'pt-serif', name: 'PT Serif', category: 'Serif', stack: '"PT Serif", Georgia, serif' },
+        { id: 'rockwell', name: 'Rockwell', category: 'Serif', stack: 'Rockwell, "Courier New", serif' },
+        { id: 'savoye-let', name: 'Savoye LET', category: 'Script', stack: '"Savoye LET", "Snell Roundhand", cursive' },
+        { id: 'sf-compact', name: 'SF Compact', category: 'Sans', stack: '"SF Compact Text", "SF Pro Text", -apple-system, sans-serif' },
+        { id: 'sf-compact-rounded', name: 'SF Compact Rounded', category: 'Rounded', stack: '"SF Compact Rounded", "SF Pro Rounded", sans-serif' },
+        { id: 'mono', name: 'SF Mono', category: 'Mono', stack: '"SF Mono", Menlo, Monaco, Consolas, monospace' },
+        { id: 'sf-pro', name: 'SF Pro', category: 'Sans', stack: '"SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif' },
+        { id: 'sf-pro-display', name: 'SF Pro Display', category: 'Sans', stack: '"SF Pro Display", "SF Pro Text", -apple-system, sans-serif' },
+        { id: 'rounded', name: 'SF Pro Rounded', category: 'Rounded', stack: '"SF Pro Rounded", "Avenir Next", "Nunito", sans-serif' },
+        { id: 'silom', name: 'Silom', category: 'Sans', stack: 'Silom, Arial, sans-serif' },
+        { id: 'sinhala-sangam', name: 'Sinhala Sangam MN', category: 'Sans', stack: '"Sinhala Sangam MN", Arial, sans-serif' },
+        { id: 'skia', name: 'Skia', category: 'Display', stack: 'Skia, "Gill Sans", sans-serif' },
+        { id: 'snell-roundhand', name: 'Snell Roundhand', category: 'Script', stack: '"Snell Roundhand", "Apple Chancery", cursive' },
+        { id: 'songti-sc', name: 'Songti SC', category: 'Serif', stack: '"Songti SC", Georgia, serif' },
+        { id: 'system', name: 'System', category: 'Sans', stack: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' },
+        { id: 'tahoma', name: 'Tahoma', category: 'Sans', stack: 'Tahoma, Geneva, sans-serif' },
+        { id: 'tamil-sangam', name: 'Tamil Sangam MN', category: 'Sans', stack: '"Tamil Sangam MN", Arial, sans-serif' },
+        { id: 'telugu-sangam', name: 'Telugu Sangam MN', category: 'Sans', stack: '"Telugu Sangam MN", Arial, sans-serif' },
+        { id: 'thonburi', name: 'Thonburi', category: 'Sans', stack: 'Thonburi, Arial, sans-serif' },
+        { id: 'times', name: 'Times', category: 'Serif', stack: 'Times, "Times New Roman", serif' },
+        { id: 'times-new-roman', name: 'Times New Roman', category: 'Serif', stack: '"Times New Roman", Times, serif' },
+        { id: 'trebuchet', name: 'Trebuchet MS', category: 'Sans', stack: '"Trebuchet MS", "Lucida Grande", sans-serif' },
+        { id: 'verdana', name: 'Verdana', category: 'Sans', stack: 'Verdana, Geneva, sans-serif' },
+        { id: 'zapfino', name: 'Zapfino', category: 'Script', stack: 'Zapfino, "Snell Roundhand", cursive' }
+    ];
+    const FONT_STACKS = Object.fromEntries(FONT_OPTIONS.map((font) => [font.id, font.stack]));
     const defaultSettings = {
         language: 'fr',
         theme: 'system',
+        previewFont: 'system',
         customColors: {
             bgColor: '#ffffff',
             cardColor: '#f3f4f6',
@@ -58,12 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
         toast: document.getElementById('toast'),
         toastMessage: document.getElementById('toast-message'),
         heroSwatch: document.getElementById('hero-swatch'),
-        colorName: document.getElementById('color-name'),
-        hexValue: document.getElementById('hex-value'),
         formatHex: document.getElementById('format-hex'),
         rgbValue: document.getElementById('rgb-value'),
         hslValue: document.getElementById('hsl-value'),
         oklchValue: document.getElementById('oklch-value'),
+        fontControl: document.getElementById('font-control'),
+        previewFontTrigger: document.getElementById('preview-font-trigger'),
+        previewFontLabel: document.getElementById('preview-font-label'),
+        fontPickerPanel: document.getElementById('font-picker-panel'),
+        fontSearch: document.getElementById('font-search'),
+        fontList: document.getElementById('font-list'),
+        fontScrollbar: document.getElementById('font-scrollbar'),
+        fontScrollbarThumb: document.getElementById('font-scrollbar-thumb'),
         usageInput: document.getElementById('usage-input'),
         usageButton: document.getElementById('usage-button'),
         usageText: document.getElementById('usage-text'),
@@ -108,6 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'Copied!',
             error: 'Error picking color',
             code: 'Code',
+            font: 'Font',
+            fontSearch: 'Search fonts',
+            noResults: 'No results',
             supportFreeTools: 'Support free tools',
             pickColor: 'Pick color',
             back: 'Back',
@@ -165,6 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'Copié !',
             error: 'Erreur lors de la sélection',
             code: 'Code',
+            font: 'Police',
+            fontSearch: 'Rechercher une font',
+            noResults: 'Aucun résultat',
             supportFreeTools: 'Soutenir les outils gratuits',
             pickColor: 'Choisir une couleur',
             back: 'Retour',
@@ -222,6 +338,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: '¡Copiado!',
             error: 'Error al elegir el color',
             code: 'Código',
+            font: 'Fuente',
+            fontSearch: 'Buscar fuentes',
+            noResults: 'Sin resultados',
             supportFreeTools: 'Apoyar herramientas gratis',
             pickColor: 'Elegir color',
             back: 'Volver',
@@ -279,6 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'Kopiert!',
             error: 'Fehler beim Auswählen der Farbe',
             code: 'Code',
+            font: 'Schrift',
+            fontSearch: 'Schriften suchen',
+            noResults: 'Keine Ergebnisse',
             supportFreeTools: 'Kostenlose Tools unterstützen',
             pickColor: 'Farbe wählen',
             back: 'Zurück',
@@ -336,6 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'Copiado!',
             error: 'Erro ao escolher a cor',
             code: 'Código',
+            font: 'Fonte',
+            fontSearch: 'Buscar fontes',
+            noResults: 'Sem resultados',
             supportFreeTools: 'Apoiar ferramentas grátis',
             pickColor: 'Escolher cor',
             back: 'Voltar',
@@ -393,6 +518,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: '已复制！',
             error: '取色出错',
             code: '代码',
+            font: '字体',
+            fontSearch: '搜索字体',
+            noResults: '无结果',
             supportFreeTools: '支持免费工具',
             pickColor: '选择颜色',
             back: '返回',
@@ -450,6 +578,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'コピーしました！',
             error: '色の取得中にエラーが発生しました',
             code: 'コード',
+            font: 'フォント',
+            fontSearch: 'フォントを検索',
+            noResults: '結果なし',
             supportFreeTools: '無料ツールを支援',
             pickColor: '色を選択',
             back: '戻る',
@@ -507,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: 'Скопировано!',
             error: 'Ошибка выбора цвета',
             code: 'Код',
+            font: 'Шрифт',
+            fontSearch: 'Поиск шрифтов',
+            noResults: 'Нет результатов',
             supportFreeTools: 'Поддержать бесплатные инструменты',
             pickColor: 'Выбрать цвет',
             back: 'Назад',
@@ -550,6 +684,12 @@ document.addEventListener('DOMContentLoaded', () => {
         els.historyOpenBtn.addEventListener('click', () => showView('details'));
         els.backBtn.addEventListener('click', () => showView('capture'));
         els.usageInput.addEventListener('input', syncUsagePreview);
+        els.previewFontTrigger.addEventListener('click', toggleFontPicker);
+        els.fontSearch.addEventListener('input', renderFontOptions);
+        els.fontSearch.addEventListener('keydown', handleFontSearchKeydown);
+        els.fontList.addEventListener('scroll', updateFontScrollbar);
+        window.addEventListener('resize', updateFontScrollbar);
+        document.addEventListener('click', closeFontPickerFromOutside);
 
         els.historyTab.addEventListener('click', () => setCollection('history'));
         els.favoritesTab.addEventListener('click', () => {
@@ -670,8 +810,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const hsl = hexToHsl(currentColor);
         const oklch = currentColor === DEFAULT_COLOR ? '0.62, 0.16, 250' : hexToOklch(currentColor);
 
-        els.colorName.textContent = 'sRGB';
-        els.hexValue.textContent = currentColor;
         els.formatHex.textContent = currentColor;
         els.rgbValue.textContent = rgb;
         els.hslValue.textContent = hsl;
@@ -868,6 +1006,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!candidate || typeof candidate !== 'object') return false;
         if (candidate.language && !translations[candidate.language]) return false;
         if (candidate.theme && !VALID_THEMES.includes(candidate.theme)) return false;
+        if (candidate.previewFont && !FONT_STACKS[candidate.previewFont]) return false;
         return true;
     }
 
@@ -877,6 +1016,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applySettings() {
         els.languageSelect.value = translations[settings.language] ? settings.language : 'fr';
+        if (!FONT_STACKS[settings.previewFont]) settings.previewFont = defaultSettings.previewFont;
+        applyPreviewFont();
         if (!VALID_THEMES.includes(settings.theme)) {
             settings.theme = defaultSettings.theme;
             saveSettings();
@@ -929,6 +1070,133 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveTimeout = setTimeout(saveSettings, 400);
     }
 
+    function updatePreviewFont(fontId) {
+        settings.previewFont = FONT_STACKS[fontId] ? fontId : defaultSettings.previewFont;
+        applyPreviewFont();
+        renderFontOptions();
+        closeFontPicker();
+        saveSettings();
+    }
+
+    function applyPreviewFont() {
+        const font = getSelectedFont();
+        document.documentElement.style.setProperty('--preview-font', font.stack);
+        els.previewFontLabel.textContent = font.name;
+        els.previewFontTrigger.style.fontFamily = font.stack;
+    }
+
+    function getSelectedFont() {
+        return FONT_OPTIONS.find((font) => font.id === settings.previewFont) || FONT_OPTIONS.find((font) => font.id === defaultSettings.previewFont);
+    }
+
+    function getSortedFonts() {
+        return FONT_OPTIONS.slice().sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function toggleFontPicker(event) {
+        event.stopPropagation();
+        if (els.fontPickerPanel.classList.contains('hidden')) {
+            openFontPicker();
+        } else {
+            closeFontPicker();
+        }
+    }
+
+    function openFontPicker() {
+        els.fontPickerPanel.classList.remove('hidden');
+        els.previewFontTrigger.setAttribute('aria-expanded', 'true');
+        els.fontSearch.value = '';
+        renderFontOptions();
+        window.setTimeout(() => {
+            els.fontSearch.focus();
+            updateFontScrollbar();
+        }, 0);
+    }
+
+    function closeFontPicker() {
+        els.fontPickerPanel.classList.add('hidden');
+        els.previewFontTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeFontPickerFromOutside(event) {
+        if (!els.fontControl.contains(event.target)) closeFontPicker();
+    }
+
+    function handleFontSearchKeydown(event) {
+        if (event.key === 'Escape') {
+            closeFontPicker();
+            els.previewFontTrigger.focus();
+        }
+    }
+
+    function renderFontOptions() {
+        const query = (els.fontSearch.value || '').trim().toLowerCase();
+        const fonts = getSortedFonts().filter((font) => {
+            const haystack = `${font.name} ${font.category}`.toLowerCase();
+            return haystack.includes(query);
+        });
+
+        els.fontList.innerHTML = '';
+        if (!fonts.length) {
+            const empty = document.createElement('p');
+            empty.className = 'font-picker-empty';
+            empty.textContent = t('noResults');
+            els.fontList.appendChild(empty);
+            updateFontScrollbar();
+            return;
+        }
+
+        fonts.forEach((font) => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'font-option';
+            option.dataset.fontId = font.id;
+            option.setAttribute('role', 'option');
+            option.setAttribute('aria-selected', String(font.id === settings.previewFont));
+            option.style.fontFamily = font.stack;
+
+            const name = document.createElement('span');
+            name.className = 'font-option-name';
+            name.textContent = font.name;
+
+            const category = document.createElement('span');
+            category.className = 'font-option-category';
+            category.textContent = font.category;
+
+            const check = document.createElement('span');
+            check.className = 'font-option-check';
+            check.textContent = font.id === settings.previewFont ? '✓' : '';
+
+            option.append(name, category, check);
+            option.addEventListener('click', () => updatePreviewFont(font.id));
+            els.fontList.appendChild(option);
+        });
+        els.fontList.scrollTop = 0;
+        updateFontScrollbar();
+    }
+
+    function updateFontScrollbar() {
+        if (els.fontPickerPanel.classList.contains('hidden')) return;
+
+        window.requestAnimationFrame(() => {
+            const maxScroll = els.fontList.scrollHeight - els.fontList.clientHeight;
+            if (maxScroll <= 1) {
+                els.fontScrollbar.classList.add('hidden');
+                return;
+            }
+
+            els.fontScrollbar.classList.remove('hidden');
+            const trackHeight = els.fontList.clientHeight;
+            const thumbHeight = Math.max(34, Math.round((els.fontList.clientHeight / els.fontList.scrollHeight) * trackHeight));
+            const travel = trackHeight - thumbHeight;
+            const progress = Math.min(1, Math.max(0, els.fontList.scrollTop / maxScroll));
+            const thumbTop = Math.round(progress * travel);
+
+            els.fontScrollbarThumb.style.height = `${thumbHeight}px`;
+            els.fontScrollbarThumb.style.transform = `translateY(${thumbTop}px)`;
+        });
+    }
+
     function applyTranslations() {
         document.documentElement.lang = currentLanguage();
         document.title = t('pageTitle');
@@ -951,6 +1219,10 @@ document.addEventListener('DOMContentLoaded', () => {
             element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel));
         });
 
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+            element.setAttribute('placeholder', t(element.dataset.i18nPlaceholder));
+        });
+
         updateCollectionTitle();
     }
 
@@ -964,7 +1236,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function refreshLocalizedDynamicText() {
-        els.colorName.textContent = getColorName(currentColor);
         if (isPicking) {
             els.captureTitle.textContent = t('pickingCta');
         } else {
