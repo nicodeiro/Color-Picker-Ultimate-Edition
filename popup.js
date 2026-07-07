@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         usageButton: document.getElementById('usage-button'),
         usageText: document.getElementById('usage-text'),
         codeOutput: document.getElementById('code-output'),
+        historyTitle: document.getElementById('history-title'),
         colorHistory: document.getElementById('color-history'),
         historyTab: document.getElementById('history-tab'),
         favoritesTab: document.getElementById('favorites-tab')
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Buy me a coffee',
             captureCta: 'Choose a color on screen',
             pickingCta: 'Select a color on screen',
-            detailsTitle: 'Latest details',
+            detailsTitle: 'Color Inspector',
             history: 'History',
             usage: 'Usage',
             formats: 'Formats',
@@ -154,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Offrez-moi un café',
             captureCta: 'Choisir une couleur à l\'écran',
             pickingCta: 'Sélectionnez une couleur à l\'écran',
-            detailsTitle: 'Derniers détails',
+            detailsTitle: 'Inspecteur couleur',
             history: 'Historique',
             usage: 'Usage',
             formats: 'Formats',
@@ -211,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Invítame a un café',
             captureCta: 'Elige un color en pantalla',
             pickingCta: 'Selecciona un color en pantalla',
-            detailsTitle: 'Últimos detalles',
+            detailsTitle: 'Inspector de color',
             history: 'Historial',
             usage: 'Uso',
             formats: 'Formatos',
@@ -268,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Spendiere mir einen Kaffee',
             captureCta: 'Farbe auf dem Bildschirm wählen',
             pickingCta: 'Wähle eine Farbe auf dem Bildschirm',
-            detailsTitle: 'Letzte Details',
+            detailsTitle: 'Farbinspektor',
             history: 'Verlauf',
             usage: 'Verwendung',
             formats: 'Formate',
@@ -325,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Pague-me um café',
             captureCta: 'Escolha uma cor na tela',
             pickingCta: 'Selecione uma cor na tela',
-            detailsTitle: 'Últimos detalhes',
+            detailsTitle: 'Inspetor de cor',
             history: 'Histórico',
             usage: 'Uso',
             formats: 'Formatos',
@@ -382,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: '请我喝咖啡',
             captureCta: '在屏幕上选择颜色',
             pickingCta: '请在屏幕上选择颜色',
-            detailsTitle: '最新详情',
+            detailsTitle: '颜色检查器',
             history: '历史',
             usage: '用法',
             formats: '格式',
@@ -439,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'コーヒーをおごる',
             captureCta: '画面上の色を選択',
             pickingCta: '画面上の色を選択してください',
-            detailsTitle: '最新の詳細',
+            detailsTitle: 'カラーインスペクター',
             history: '履歴',
             usage: '使用例',
             formats: '形式',
@@ -496,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Купить мне кофе',
             captureCta: 'Выберите цвет на экране',
             pickingCta: 'Выберите цвет на экране',
-            detailsTitle: 'Последние детали',
+            detailsTitle: 'Инспектор цвета',
             history: 'История',
             usage: 'Пример',
             formats: 'Форматы',
@@ -774,7 +775,14 @@ document.addEventListener('DOMContentLoaded', () => {
         els.favoritesTab.classList.toggle('active', currentCollection === 'favorites');
         els.historyTab.setAttribute('aria-selected', String(currentCollection === 'history'));
         els.favoritesTab.setAttribute('aria-selected', String(currentCollection === 'favorites'));
+        updateCollectionTitle();
         renderHistory();
+    }
+
+    function updateCollectionTitle() {
+        const key = currentCollection === 'favorites' ? 'favorites' : 'history';
+        els.historyTitle.textContent = t(key);
+        els.historyTitle.dataset.i18n = key;
     }
 
     function toggleFavorite(hex) {
@@ -942,6 +950,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
             element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel));
         });
+
+        updateCollectionTitle();
     }
 
     function t(key) {
