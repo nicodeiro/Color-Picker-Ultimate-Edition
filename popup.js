@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCodeFormat = 'css';
     let settings = { ...defaultSettings };
     let isPicking = false;
+    let isDeleteMode = false;
 
     const els = {
         captureView: document.getElementById('capture-view'),
@@ -178,10 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
         usageButton: document.getElementById('usage-button'),
         usageText: document.getElementById('usage-text'),
         codeOutput: document.getElementById('code-output'),
-        historyTitle: document.getElementById('history-title'),
         colorHistory: document.getElementById('color-history'),
-        historyTab: document.getElementById('history-tab'),
-        favoritesTab: document.getElementById('favorites-tab')
+        collectionSelect: document.getElementById('collection-select'),
+        clearCollectionBtn: document.getElementById('clear-collection-btn')
     };
 
     const translations = {
@@ -232,6 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSettings: 'Close settings',
             addFavorite: 'Add to favorites',
             removeFavorite: 'Remove from favorites',
+            clearHistory: 'Clear history',
+            clearFavorites: 'Clear favorites',
+            enterDeleteMode: 'Delete colors',
+            exitDeleteMode: 'Done deleting',
+            removeColor: 'Remove color',
+            noHistory: 'No colors yet',
             colorNames: {
                 '#2563EB': 'Royal Blue',
                 '#7C3AED': 'Electric Purple',
@@ -292,6 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSettings: 'Fermer les paramètres',
             addFavorite: 'Ajouter aux favoris',
             removeFavorite: 'Retirer des favoris',
+            clearHistory: 'Vider l\'historique',
+            clearFavorites: 'Vider les favoris',
+            enterDeleteMode: 'Supprimer des couleurs',
+            exitDeleteMode: 'Terminer la suppression',
+            removeColor: 'Supprimer la couleur',
+            noHistory: 'Aucune couleur pour le moment',
             colorNames: {
                 '#2563EB': 'Bleu royal',
                 '#7C3AED': 'Violet électrique',
@@ -691,10 +703,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', updateFontScrollbar);
         document.addEventListener('click', closeFontPickerFromOutside);
 
-        els.historyTab.addEventListener('click', () => setCollection('history'));
-        els.favoritesTab.addEventListener('click', () => {
-            setCollection(currentCollection === 'favorites' ? 'history' : 'favorites');
-        });
+        els.collectionSelect.addEventListener('change', (event) => setCollection(event.target.value));
+        els.clearCollectionBtn.addEventListener('click', toggleDeleteMode);
 
         document.querySelectorAll('.settings-trigger').forEach((button) => {
             button.addEventListener('click', () => els.settingsModal.classList.remove('hidden'));
@@ -867,10 +877,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ? favoriteColors.slice(0, MAX_HISTORY)
             : colorHistory.slice(0, MAX_HISTORY);
 
-        if (currentCollection === 'favorites' && !colors.length) {
+        if (!colors.length) {
             const empty = document.createElement('p');
             empty.className = 'history-empty';
-            empty.textContent = t('noFavorites');
+            empty.textContent = currentCollection === 'favorites' ? t('noFavorites') : t('noHistory');
             els.colorHistory.appendChild(empty);
             return;
         }
@@ -893,34 +903,59 @@ document.addEventListener('DOMContentLoaded', () => {
             label.className = 'history-label';
             label.textContent = hex.toUpperCase();
 
-            const favoriteButton = document.createElement('button');
-            favoriteButton.type = 'button';
-            favoriteButton.className = `favorite-toggle${isFavorite ? ' active' : ''}`;
-            favoriteButton.setAttribute('aria-label', isFavorite ? t('removeFavorite') : t('addFavorite'));
-            favoriteButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.8 22 9.3 16.7 13.9 18.4 21 12 17.2 5.6 21 7.3 13.9 2 9.3 9 8.8 12 2"></polygon></svg>';
+            const actionButton = document.createElement('button');
+            actionButton.type = 'button';
+
+            if (isDeleteMode) {
+                actionButton.className = 'history-delete-toggle';
+                actionButton.setAttribute('aria-label', `${t('removeColor')} ${hex.toUpperCase()}`);
+                actionButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path></svg>';
+                actionButton.addEventListener('click', () => removeColorFromCurrentCollection(hex));
+            } else {
+                actionButton.className = `favorite-toggle${isFavorite ? ' active' : ''}`;
+                actionButton.setAttribute('aria-label', isFavorite ? t('removeFavorite') : t('addFavorite'));
+                actionButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.8 22 9.3 16.7 13.9 18.4 21 12 17.2 5.6 21 7.3 13.9 2 9.3 9 8.8 12 2"></polygon></svg>';
+                actionButton.addEventListener('click', () => toggleFavorite(hex));
+            }
 
             colorButton.append(swatch, label);
             colorButton.addEventListener('click', () => setColor(hex, { save: false }));
-            favoriteButton.addEventListener('click', () => toggleFavorite(hex));
-            card.append(colorButton, favoriteButton);
+            card.append(colorButton, actionButton);
             els.colorHistory.appendChild(card);
         });
     }
 
     function setCollection(collection) {
         currentCollection = collection === 'favorites' ? 'favorites' : 'history';
-        els.historyTab.classList.toggle('active', currentCollection === 'history');
-        els.favoritesTab.classList.toggle('active', currentCollection === 'favorites');
-        els.historyTab.setAttribute('aria-selected', String(currentCollection === 'history'));
-        els.favoritesTab.setAttribute('aria-selected', String(currentCollection === 'favorites'));
+        isDeleteMode = false;
+        els.collectionSelect.value = currentCollection;
         updateCollectionTitle();
         renderHistory();
     }
 
     function updateCollectionTitle() {
-        const key = currentCollection === 'favorites' ? 'favorites' : 'history';
-        els.historyTitle.textContent = t(key);
-        els.historyTitle.dataset.i18n = key;
+        const labelKey = isDeleteMode ? 'exitDeleteMode' : 'enterDeleteMode';
+        els.clearCollectionBtn.classList.toggle('active', isDeleteMode);
+        els.clearCollectionBtn.setAttribute('aria-label', t(labelKey));
+        els.clearCollectionBtn.title = t(labelKey);
+    }
+
+    function toggleDeleteMode() {
+        isDeleteMode = !isDeleteMode;
+        updateCollectionTitle();
+        renderHistory();
+    }
+
+    function removeColorFromCurrentCollection(hex) {
+        const normalized = hex.toUpperCase();
+        if (currentCollection === 'favorites') {
+            favoriteColors = favoriteColors.filter((item) => item.toLowerCase() !== normalized.toLowerCase());
+            saveFavoriteColors();
+        } else {
+            colorHistory = colorHistory.filter((item) => item.toLowerCase() !== normalized.toLowerCase());
+            saveColorHistory();
+        }
+        renderHistory();
     }
 
     function toggleFavorite(hex) {
@@ -941,10 +976,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadColorHistory() {
         storage.get(['colorHistory'], (result) => {
-            colorHistory = Array.isArray(result.colorHistory) && result.colorHistory.length
+            colorHistory = Array.isArray(result.colorHistory)
                 ? result.colorHistory.filter(isValidHex).slice(0, MAX_HISTORY)
                 : DEFAULT_HISTORY.slice();
-            if (!colorHistory.length) colorHistory = DEFAULT_HISTORY.slice();
             renderHistory();
         });
     }
