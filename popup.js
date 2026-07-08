@@ -180,7 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
         usageText: document.getElementById('usage-text'),
         codeOutput: document.getElementById('code-output'),
         colorHistory: document.getElementById('color-history'),
-        collectionSelect: document.getElementById('collection-select'),
+        collectionTrigger: document.getElementById('collection-trigger'),
+        collectionLabel: document.getElementById('collection-label'),
+        collectionPanel: document.getElementById('collection-panel'),
         clearCollectionBtn: document.getElementById('clear-collection-btn')
     };
 
@@ -702,8 +704,15 @@ document.addEventListener('DOMContentLoaded', () => {
         els.fontList.addEventListener('scroll', updateFontScrollbar);
         window.addEventListener('resize', updateFontScrollbar);
         document.addEventListener('click', closeFontPickerFromOutside);
+        document.addEventListener('click', closeCollectionDropdownFromOutside);
 
-        els.collectionSelect.addEventListener('change', (event) => setCollection(event.target.value));
+        els.collectionTrigger.addEventListener('click', toggleCollectionDropdown);
+        document.querySelectorAll('.history-selector-option').forEach((button) => {
+            button.addEventListener('click', () => {
+                setCollection(button.dataset.collection);
+                closeCollectionDropdown();
+            });
+        });
         els.clearCollectionBtn.addEventListener('click', toggleDeleteMode);
 
         document.querySelectorAll('.settings-trigger').forEach((button) => {
@@ -928,9 +937,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function setCollection(collection) {
         currentCollection = collection === 'favorites' ? 'favorites' : 'history';
         isDeleteMode = false;
-        els.collectionSelect.value = currentCollection;
+        updateCollectionControl();
+        updateCollectionControl();
         updateCollectionTitle();
         renderHistory();
+    }
+
+    function updateCollectionControl() {
+        const labelKey = currentCollection === 'favorites' ? 'favorites' : 'history';
+        els.collectionLabel.textContent = t(labelKey);
+        document.querySelectorAll('.history-selector-option').forEach((button) => {
+            const isSelected = button.dataset.collection === currentCollection;
+            button.setAttribute('aria-selected', String(isSelected));
+        });
     }
 
     function updateCollectionTitle() {
@@ -944,6 +963,24 @@ document.addEventListener('DOMContentLoaded', () => {
         isDeleteMode = !isDeleteMode;
         updateCollectionTitle();
         renderHistory();
+    }
+
+    function toggleCollectionDropdown(event) {
+        event.stopPropagation();
+        const willOpen = els.collectionPanel.classList.contains('hidden');
+        els.collectionPanel.classList.toggle('hidden', !willOpen);
+        els.collectionTrigger.setAttribute('aria-expanded', String(willOpen));
+    }
+
+    function closeCollectionDropdown() {
+        els.collectionPanel.classList.add('hidden');
+        els.collectionTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeCollectionDropdownFromOutside(event) {
+        if (els.collectionPanel.classList.contains('hidden')) return;
+        if (els.collectionPanel.contains(event.target) || els.collectionTrigger.contains(event.target)) return;
+        closeCollectionDropdown();
     }
 
     function removeColorFromCurrentCollection(hex) {

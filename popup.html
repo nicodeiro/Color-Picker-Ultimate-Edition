@@ -181,13 +181,20 @@
                 <section class="history-card-section">
                     <div class="section-title-row">
                         <div class="history-selector-wrap">
-                            <select id="collection-select" class="history-selector" aria-label="Collection de couleurs" data-i18n-aria-label="colorCollection">
-                                <option value="history" data-i18n="history">Historique</option>
-                                <option value="favorites" data-i18n="favorites">Favoris</option>
-                            </select>
-                            <svg aria-hidden="true" class="history-selector-chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m6 9 6 6 6-6"></path>
-                            </svg>
+                            <button id="collection-trigger" class="history-selector-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="collection-panel" aria-label="Collection de couleurs" data-i18n-aria-label="colorCollection">
+                                <span id="collection-label">Historique</span>
+                                <span class="history-selector-chevron" aria-hidden="true"></span>
+                            </button>
+                            <div id="collection-panel" class="history-selector-panel hidden" role="listbox" aria-label="Collection de couleurs" data-i18n-aria-label="colorCollection">
+                                <button class="history-selector-option" type="button" role="option" data-collection="history" aria-selected="true">
+                                    <span data-i18n="history">Historique</span>
+                                    <span class="history-selector-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button class="history-selector-option" type="button" role="option" data-collection="favorites" aria-selected="false">
+                                    <span data-i18n="favorites">Favoris</span>
+                                    <span class="history-selector-check" aria-hidden="true">✓</span>
+                                </button>
+                            </div>
                         </div>
                         <button id="clear-collection-btn" class="history-clear-btn" type="button" aria-label="Vider l'historique">
                             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
