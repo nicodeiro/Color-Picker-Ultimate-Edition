@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Color Picker Ultimate Edition",
+    "description": "Public extension name"
+  },
+  "extensionDescription": {
+    "message": "Pick any color on screen, copy its HEX, RGB and HSL values, and keep a local history on this device.",
+    "description": "Short Chrome Web Store description"
+  }
+}

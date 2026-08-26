@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Color Picker Ultimate Edition",
+    "description": "拡張機能の公開名"
+  },
+  "extensionDescription": {
+    "message": "画面上の色を取得し、HEX・RGB・HSL 値をコピー。履歴はこの端末内に保存されます。",
+    "description": "Chrome ウェブストアの短い説明"
+  }
+}

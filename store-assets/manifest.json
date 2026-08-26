@@ -1,0 +1,66 @@
+{
+  "product": "Color Picker Ultimate Edition",
+  "platform": "Chrome Web Store",
+  "generated_at": "2026-07-29",
+  "exports": [
+    {
+      "file": "exports/01-en-pick-any-color-1280x800.png",
+      "slot": "localized_screenshot_en",
+      "order": 1,
+      "width": 1280,
+      "height": 800,
+      "color_type": "RGB",
+      "alpha": false
+    },
+    {
+      "file": "exports/02-en-copy-color-values-1280x800.png",
+      "slot": "localized_screenshot_en",
+      "order": 2,
+      "width": 1280,
+      "height": 800,
+      "color_type": "RGB",
+      "alpha": false
+    },
+    {
+      "file": "exports/03-en-history-favorites-1280x800.png",
+      "slot": "localized_screenshot_en",
+      "order": 3,
+      "width": 1280,
+      "height": 800,
+      "color_type": "RGB",
+      "alpha": false
+    },
+    {
+      "file": "exports/04-international-no-text-1280x800.png",
+      "slot": "international_screenshot",
+      "order": 1,
+      "width": 1280,
+      "height": 800,
+      "color_type": "RGB",
+      "alpha": false
+    },
+    {
+      "file": "exports/05-small-promo-440x280.png",
+      "slot": "small_promo",
+      "width": 440,
+      "height": 280,
+      "color_type": "RGB",
+      "alpha": false
+    },
+    {
+      "file": "exports/06-marquee-1400x560.png",
+      "slot": "marquee",
+      "optional": true,
+      "width": 1400,
+      "height": 560,
+      "color_type": "RGB",
+      "alpha": false
+    }
+  ],
+  "provenance": {
+    "extension_ui": "popup.html",
+    "extension_icon": "icons/icon128.png",
+    "spectrum_ring": "assets/intelligence-ring-wide-edge-reflections-v3.png",
+    "renderer": "store-assets/source/render-store-assets.swift"
+  }
+}

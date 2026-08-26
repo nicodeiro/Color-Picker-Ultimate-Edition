@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Color Picker capture setup</title>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  localStorage.setItem('settings', JSON.stringify({
+    language: 'en',
+    theme: 'light',
+    previewFont: 'system',
+    customColors: {
+      bgColor: '#ffffff',
+      cardColor: '#f3f4f6',
+      textColor: '#1f2937',
+      accentColor: '#2563eb'
+    }
+  }));
+  localStorage.setItem('colorHistory', JSON.stringify([
+    '#F96B00',
+    '#2F853D',
+    '#08274D',
+    '#7C3AED',
+    '#FF3B5F',
+    '#06B6D4',
+    '#FACC15',
+    '#111827',
+    '#E8A9C4',
+    '#94A3B8'
+  ]));
+  localStorage.setItem('favoriteColors', JSON.stringify([
+    '#F96B00',
+    '#2F853D',
+    '#08274D',
+    '#7C3AED'
+  ]));
+
+  const target = new URL('../../popup.html', window.location.href);
+  for (const [key, value] of params) target.searchParams.set(key, value);
+  window.location.replace(target);
+</script>

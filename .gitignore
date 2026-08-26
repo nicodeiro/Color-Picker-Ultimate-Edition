@@ -1,0 +1,10 @@
+.DS_Store
+.playwright-cli/
+.codex-audit/
+dist/
+output/
+store-assets/candidates/
+store-assets/*.zip
+
+# QA is curated into Git explicitly. Older exploratory captures stay local.
+qa/*

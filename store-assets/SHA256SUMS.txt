@@ -1,0 +1,6 @@
+b93242d0dcf698fdad15582139cbe493058f521af2596fa240602d6c5d3202e0  store-assets/exports/01-en-pick-any-color-1280x800.png
+13c9a1e696394ccd0c7517accdb421d0aa82791a5309c6924e32c8c5afa455bd  store-assets/exports/02-en-copy-color-values-1280x800.png
+345fad0b0f69bdd3dd80fd9528893c13dd8052ab4656e9f3445458dfb0cfcbcb  store-assets/exports/03-en-history-favorites-1280x800.png
+319f32ab2682136b0aef378afd127071242cf3b2f98fff6caa6047196d57a6eb  store-assets/exports/04-international-no-text-1280x800.png
+173366210b8104df42981ee5b5176d81be5d64cb98bd58c07e980745a1d2360a  store-assets/exports/05-small-promo-440x280.png
+d557b3138a599b8a724aab96ce18dda27aafab4bee527cb8a34f525043b21e95  store-assets/exports/06-marquee-1400x560.png

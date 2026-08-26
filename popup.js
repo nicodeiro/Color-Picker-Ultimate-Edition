@@ -1,3 +1,5 @@
+import { createLucideIcon } from './vendor/lucide-icons.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const storage = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)
         ? chrome.storage.local
@@ -11,16 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 callback(result);
             },
-            set(items) {
+            set(items, callback) {
                 Object.entries(items).forEach(([key, value]) => {
                     localStorage.setItem(key, JSON.stringify(value));
                 });
+                if (callback) callback();
             }
         };
 
-    const DEFAULT_COLOR = '#2563EB';
-    const DEFAULT_HISTORY = ['#2563EB', '#7C3AED', '#FF3B5F', '#FF7A1A', '#10B981', '#06B6D4', '#F9AB00', '#111827', '#CBD5E1', '#EDE9FE'];
+    const DEFAULT_COLOR = '#F96B00';
+    const DEFAULT_HISTORY = ['#F96B00', '#2F853D', '#08274D', '#6D7278', '#24292F', '#000000', '#2563EB', '#7C3AED', '#FF3B5F', '#06B6D4'];
     const MAX_HISTORY = 10;
+    const COLLAPSED_SAVED_COLORS = 5;
+    const COLOR_VALUE_FORMATS = ['hex', 'rgb', 'hsl'];
     const VALID_THEMES = ['system', 'light', 'dark'];
     const FONT_OPTIONS = [
         { id: 'american-typewriter', name: 'American Typewriter', category: 'Serif', stack: '"American Typewriter", "Courier New", serif' },
@@ -127,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const FONT_STACKS = Object.fromEntries(FONT_OPTIONS.map((font) => [font.id, font.stack]));
     const defaultSettings = {
         language: 'fr',
-        theme: 'system',
+        theme: 'light',
         previewFont: 'system',
         customColors: {
             bgColor: '#ffffff',
@@ -142,17 +147,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let favoriteColors = [];
     let currentCollection = 'history';
     let currentCodeFormat = 'css';
+    let currentValueFormat = 'hex';
+    let activeView = 'capture';
+    let savedLibraryFilter = 'history';
+    let savedLibrarySort = 'recent';
+    let savedLibrarySearch = '';
+    let isCreatingColor = false;
+    let newColorOrigin = 'details';
+    let newColorOriginalColor = DEFAULT_COLOR;
+    let newColorFormat = 'hex';
+    let newColorDraft = { h: 26, s: 100, v: 98 };
+    let newColorPointerId = null;
     let settings = { ...defaultSettings };
     let isPicking = false;
     let isDeleteMode = false;
+    let historyDragState = null;
+    let suppressHistoryClick = false;
+    let lastFocusedBeforeModal = null;
+    const RING_IDLE_DURATION = 16000;
+    const RING_IDLE_RATE = 1.25;
+    const RING_ACTIVE_RATE = 8;
+    let ringAnimations = [];
+    let ringRateFrame = 0;
+    let ringPlaybackRate = RING_IDLE_RATE;
+    const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
     const els = {
         captureView: document.getElementById('capture-view'),
         detailsView: document.getElementById('details-view'),
+        savedLibraryView: document.getElementById('saved-library-view'),
         pickBtn: document.getElementById('pick-btn'),
         historyOpenBtn: document.getElementById('history-open-btn'),
         historyCount: document.getElementById('history-count'),
-        captureTitle: document.getElementById('capture-title'),
         captureFeedback: document.getElementById('capture-feedback'),
         backBtn: document.getElementById('back-btn'),
         settingsModal: document.getElementById('settings-modal'),
@@ -163,6 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
         toast: document.getElementById('toast'),
         toastMessage: document.getElementById('toast-message'),
         heroSwatch: document.getElementById('hero-swatch'),
+        intelligenceRings: Array.from(document.querySelectorAll('.intelligence-ring')),
+        currentColorHex: document.getElementById('current-color-hex'),
+        heroCopyBtn: document.getElementById('hero-copy-btn'),
+        heroFavoriteBtn: document.getElementById('hero-favorite-btn'),
+        colorFormatTabs: Array.from(document.querySelectorAll('.color-format-tab')),
         formatHex: document.getElementById('format-hex'),
         rgbValue: document.getElementById('rgb-value'),
         hslValue: document.getElementById('hsl-value'),
@@ -179,16 +211,41 @@ document.addEventListener('DOMContentLoaded', () => {
         usageButton: document.getElementById('usage-button'),
         usageText: document.getElementById('usage-text'),
         codeOutput: document.getElementById('code-output'),
+        codeDisclosure: document.getElementById('code-disclosure'),
+        codePanel: document.getElementById('code-panel'),
+        inspectorToolTabs: Array.from(document.querySelectorAll('.inspector-tool-tab')),
+        inspectorToolPanels: Array.from(document.querySelectorAll('[data-tool-panel-content]')),
         colorHistory: document.getElementById('color-history'),
-        collectionTrigger: document.getElementById('collection-trigger'),
-        collectionLabel: document.getElementById('collection-label'),
+        historyRow: document.querySelector('.saved-colors-section .history-row'),
+        savedColorsMore: document.getElementById('saved-colors-more'),
+        newColorEditor: document.getElementById('new-color-editor'),
+        newColorSv: document.getElementById('new-color-sv'),
+        newColorHue: document.getElementById('new-color-hue'),
+        newColorFormatTabs: Array.from(document.querySelectorAll('[data-new-color-format]')),
+        newColorPanels: Array.from(document.querySelectorAll('[data-new-color-panel]')),
+        newColorHex: document.getElementById('new-color-hex'),
+        newColorR: document.getElementById('new-color-r'),
+        newColorG: document.getElementById('new-color-g'),
+        newColorB: document.getElementById('new-color-b'),
+        newColorH: document.getElementById('new-color-h'),
+        newColorS: document.getElementById('new-color-s'),
+        newColorL: document.getElementById('new-color-l'),
+        newColorStatus: document.getElementById('new-color-status'),
+        newColorSave: document.getElementById('new-color-save'),
         collectionPanel: document.getElementById('collection-panel'),
-        clearCollectionBtn: document.getElementById('clear-collection-btn')
+        clearCollectionBtn: document.getElementById('clear-collection-btn'),
+        savedLibraryBack: document.getElementById('saved-library-back'),
+        savedLibraryAdd: document.getElementById('saved-library-add'),
+        savedLibrarySearchInput: document.getElementById('saved-library-search-input'),
+        savedLibraryGrid: document.getElementById('saved-library-grid'),
+        savedLibraryStatus: document.getElementById('saved-library-status'),
+        savedLibraryFilters: Array.from(document.querySelectorAll('.saved-library-filter')),
+        savedLibrarySortSelect: document.getElementById('saved-library-sort-select')
     };
 
     const translations = {
         en: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ More free tools? Check out bitek.fr ✨',
             settings: 'Settings',
@@ -254,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         fr: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ Plus d\'outils gratuits ? C\'est par ici bitek.fr ✨',
             settings: 'Paramètres',
@@ -287,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: 'Erreur lors de la sélection',
             code: 'Code',
             font: 'Police',
-            fontSearch: 'Rechercher une font',
+            fontSearch: 'Rechercher une police',
             noResults: 'Aucun résultat',
             supportFreeTools: 'Soutenir les outils gratuits',
             pickColor: 'Choisir une couleur',
@@ -320,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         es: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ ¿Más herramientas gratis? Visita bitek.fr ✨',
             settings: 'Configuración',
@@ -380,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         de: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ Mehr kostenlose Tools? Schau auf bitek.fr vorbei ✨',
             settings: 'Einstellungen',
@@ -440,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         pt: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ Mais ferramentas grátis? Confira bitek.fr ✨',
             settings: 'Configurações',
@@ -500,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         zh: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ 想要更多免费工具？请访问 bitek.fr ✨',
             settings: '设置',
@@ -560,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         ja: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ 無料ツールをもっと見るなら bitek.fr ✨',
             settings: '設定',
@@ -620,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         ru: {
-            pageTitle: 'Color Picker : Ultimate Edition',
+            pageTitle: 'Color Picker Ultimate Edition',
             title: 'Color Picker',
             promo: '✨ Больше бесплатных инструментов? Загляните на bitek.fr ✨',
             settings: 'Настройки',
@@ -642,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyCoffee: 'Купить мне кофе',
             captureCta: 'Выберите цвет на экране',
             pickingCta: 'Выберите цвет на экране',
-            detailsTitle: 'Инспектор цвета',
+            detailsTitle: 'Инспектор',
             history: 'История',
             usage: 'Пример',
             formats: 'Форматы',
@@ -681,22 +738,317 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const inspectorTranslations = {
+        en: {
+            currentColor: 'Current color', copyCurrentColor: 'Copy current color', favoriteAction: 'Favorite',
+            preview: 'Preview', previewCaption: 'Test the color in context', previewFont: 'Preview font',
+            textPreview: 'Text', buttonPreview: 'Button', values: 'Values', copyHint: 'Select a row to copy',
+            codeCaption: 'CSS, Tailwind, SwiftUI and React', library: 'Library', recents: 'Recents',
+            manage: 'Manage', done: 'Done', manageColors: 'Manage colors', moreTools: 'More Bitek tools',
+            copyFailed: 'Unable to copy', eyedropperUnsupported: 'Color sampling is unavailable',
+            savedColors: 'Saved colors', showAll: 'Show all', showLess: 'Show less', newColor: 'New color', colorFormat: 'Color format',
+            backToInspector: 'Back to Color Inspector', searchHex: 'Search a HEX code…', filterColors: 'Filter colors', allColors: 'All',
+            sortColors: 'Sort colors', sortRecent: 'Recent', sortOldest: 'Oldest', sortHex: 'HEX code', noSearchResults: 'No matching color', colorResults: 'colors displayed',
+            copiedFormat: 'Copied', colorSelected: 'selected', favoriteState: 'favorite',
+            saveColor: 'Save color', invalidColor: 'Enter a valid color', saturationBrightness: 'Saturation and brightness',
+            hexValue: 'HEX code', hue: 'Hue', red: 'Red', green: 'Green', blue: 'Blue', saturation: 'Saturation', lightness: 'Lightness'
+        },
+        fr: {
+            currentColor: 'Couleur actuelle', copyCurrentColor: 'Copier la couleur actuelle', favoriteAction: 'Favori',
+            preview: 'Aperçu', previewCaption: 'Testez la couleur en contexte', previewFont: 'Police d’aperçu',
+            textPreview: 'Texte', buttonPreview: 'Bouton', values: 'Valeurs', copyHint: 'Sélectionnez une ligne pour copier',
+            codeCaption: 'CSS, Tailwind, SwiftUI et React', library: 'Bibliothèque', recents: 'Récentes',
+            manage: 'Gérer', done: 'Terminé', manageColors: 'Gérer les couleurs', moreTools: 'Plus d’outils Bitek',
+            copyFailed: 'Impossible de copier', eyedropperUnsupported: 'Le prélèvement de couleur est indisponible',
+            savedColors: 'Couleurs enregistrées', showAll: 'Tout voir', showLess: 'Réduire', newColor: 'Nouvelle couleur', colorFormat: 'Format de couleur',
+            backToInspector: 'Retour à l’inspecteur', searchHex: 'Rechercher un code HEX…', filterColors: 'Filtrer les couleurs', allColors: 'Toutes',
+            sortColors: 'Trier les couleurs', sortRecent: 'Récentes', sortOldest: 'Anciennes', sortHex: 'Code HEX', noSearchResults: 'Aucune couleur correspondante', colorResults: 'couleurs affichées',
+            copiedFormat: 'Copié', colorSelected: 'sélectionnée', favoriteState: 'favorite',
+            saveColor: 'Enregistrer la couleur', invalidColor: 'Saisissez une couleur valide', saturationBrightness: 'Saturation et luminosité',
+            hexValue: 'Code HEX', hue: 'Teinte', red: 'Rouge', green: 'Vert', blue: 'Bleu', saturation: 'Saturation', lightness: 'Luminosité'
+        },
+        es: {
+            currentColor: 'Color actual', copyCurrentColor: 'Copiar color actual', favoriteAction: 'Favorito',
+            preview: 'Vista previa', previewCaption: 'Prueba el color en contexto', previewFont: 'Fuente de vista previa',
+            textPreview: 'Texto', buttonPreview: 'Botón', values: 'Valores', copyHint: 'Selecciona una fila para copiar',
+            codeCaption: 'CSS, Tailwind, SwiftUI y React', library: 'Biblioteca', recents: 'Recientes',
+            manage: 'Gestionar', done: 'Listo', manageColors: 'Gestionar colores', moreTools: 'Más herramientas Bitek',
+            copyFailed: 'No se pudo copiar', eyedropperUnsupported: 'El muestreo de color no está disponible',
+            savedColors: 'Colores guardados', showAll: 'Ver todo', showLess: 'Ver menos', newColor: 'Nuevo color', colorFormat: 'Formato de color',
+            backToInspector: 'Volver al inspector', searchHex: 'Buscar un código HEX…', filterColors: 'Filtrar colores', allColors: 'Todos',
+            sortColors: 'Ordenar colores', sortRecent: 'Recientes', sortOldest: 'Antiguos', sortHex: 'Código HEX', noSearchResults: 'Ningún color coincide', colorResults: 'colores mostrados',
+            copiedFormat: 'Copiado', colorSelected: 'seleccionado', favoriteState: 'favorito',
+            saveColor: 'Guardar color', invalidColor: 'Introduce un color válido', saturationBrightness: 'Saturación y brillo',
+            hexValue: 'Código HEX', hue: 'Tono', red: 'Rojo', green: 'Verde', blue: 'Azul', saturation: 'Saturación', lightness: 'Luminosidad'
+        },
+        de: {
+            currentColor: 'Aktuelle Farbe', copyCurrentColor: 'Aktuelle Farbe kopieren', favoriteAction: 'Favorit',
+            preview: 'Vorschau', previewCaption: 'Farbe im Kontext testen', previewFont: 'Vorschauschrift',
+            textPreview: 'Text', buttonPreview: 'Taste', values: 'Werte', copyHint: 'Zeile zum Kopieren auswählen',
+            codeCaption: 'CSS, Tailwind, SwiftUI und React', library: 'Bibliothek', recents: 'Zuletzt',
+            manage: 'Verwalten', done: 'Fertig', manageColors: 'Farben verwalten', moreTools: 'Weitere Bitek-Tools',
+            copyFailed: 'Kopieren nicht möglich', eyedropperUnsupported: 'Farbaufnahme ist nicht verfügbar',
+            savedColors: 'Gespeicherte Farben', showAll: 'Alle anzeigen', showLess: 'Weniger anzeigen', newColor: 'Neue Farbe', colorFormat: 'Farbformat',
+            backToInspector: 'Zurück zum Inspektor', searchHex: 'HEX-Code suchen…', filterColors: 'Farben filtern', allColors: 'Alle',
+            sortColors: 'Farben sortieren', sortRecent: 'Neueste', sortOldest: 'Älteste', sortHex: 'HEX-Code', noSearchResults: 'Keine passende Farbe', colorResults: 'Farben angezeigt',
+            copiedFormat: 'Kopiert', colorSelected: 'ausgewählt', favoriteState: 'Favorit',
+            saveColor: 'Farbe speichern', invalidColor: 'Gültige Farbe eingeben', saturationBrightness: 'Sättigung und Helligkeit',
+            hexValue: 'HEX-Code', hue: 'Farbton', red: 'Rot', green: 'Grün', blue: 'Blau', saturation: 'Sättigung', lightness: 'Helligkeit'
+        },
+        pt: {
+            currentColor: 'Cor atual', copyCurrentColor: 'Copiar cor atual', favoriteAction: 'Favorito',
+            preview: 'Prévia', previewCaption: 'Teste a cor em contexto', previewFont: 'Fonte da prévia',
+            textPreview: 'Texto', buttonPreview: 'Botão', values: 'Valores', copyHint: 'Selecione uma linha para copiar',
+            codeCaption: 'CSS, Tailwind, SwiftUI e React', library: 'Biblioteca', recents: 'Recentes',
+            manage: 'Gerenciar', done: 'Concluído', manageColors: 'Gerenciar cores', moreTools: 'Mais ferramentas Bitek',
+            copyFailed: 'Não foi possível copiar', eyedropperUnsupported: 'A captura de cor não está disponível',
+            savedColors: 'Cores salvas', showAll: 'Ver tudo', showLess: 'Ver menos', newColor: 'Nova cor', colorFormat: 'Formato de cor',
+            backToInspector: 'Voltar ao inspetor', searchHex: 'Buscar um código HEX…', filterColors: 'Filtrar cores', allColors: 'Todas',
+            sortColors: 'Ordenar cores', sortRecent: 'Recentes', sortOldest: 'Antigas', sortHex: 'Código HEX', noSearchResults: 'Nenhuma cor correspondente', colorResults: 'cores exibidas',
+            copiedFormat: 'Copiado', colorSelected: 'selecionada', favoriteState: 'favorita',
+            saveColor: 'Salvar cor', invalidColor: 'Insira uma cor válida', saturationBrightness: 'Saturação e brilho',
+            hexValue: 'Código HEX', hue: 'Matiz', red: 'Vermelho', green: 'Verde', blue: 'Azul', saturation: 'Saturação', lightness: 'Luminosidade'
+        },
+        zh: {
+            currentColor: '当前颜色', copyCurrentColor: '复制当前颜色', favoriteAction: '收藏',
+            preview: '预览', previewCaption: '在情境中测试颜色', previewFont: '预览字体',
+            textPreview: '文本', buttonPreview: '按钮', values: '颜色值', copyHint: '选择一行进行复制',
+            codeCaption: 'CSS、Tailwind、SwiftUI 和 React', library: '颜色库', recents: '最近使用',
+            manage: '管理', done: '完成', manageColors: '管理颜色', moreTools: '更多 Bitek 工具',
+            copyFailed: '无法复制', eyedropperUnsupported: '颜色取样不可用',
+            savedColors: '已保存颜色', showAll: '查看全部', showLess: '收起', newColor: '新颜色', colorFormat: '颜色格式',
+            backToInspector: '返回颜色检查器', searchHex: '搜索 HEX 代码…', filterColors: '筛选颜色', allColors: '全部',
+            sortColors: '排序颜色', sortRecent: '最近', sortOldest: '最早', sortHex: 'HEX 代码', noSearchResults: '没有匹配的颜色', colorResults: '种颜色已显示',
+            copiedFormat: '已复制', colorSelected: '已选择', favoriteState: '已收藏',
+            saveColor: '保存颜色', invalidColor: '请输入有效颜色', saturationBrightness: '饱和度和亮度',
+            hexValue: 'HEX 代码', hue: '色相', red: '红色', green: '绿色', blue: '蓝色', saturation: '饱和度', lightness: '亮度'
+        },
+        ja: {
+            currentColor: '現在のカラー', copyCurrentColor: '現在のカラーをコピー', favoriteAction: 'お気に入り',
+            preview: 'プレビュー', previewCaption: 'カラーを実際の表示で確認', previewFont: 'プレビューフォント',
+            textPreview: 'テキスト', buttonPreview: 'ボタン', values: 'カラー値', copyHint: '行を選択してコピー',
+            codeCaption: 'CSS、Tailwind、SwiftUI、React', library: 'ライブラリ', recents: '最近使った項目',
+            manage: '管理', done: '完了', manageColors: 'カラーを管理', moreTools: 'その他の Bitek ツール',
+            copyFailed: 'コピーできませんでした', eyedropperUnsupported: 'カラー抽出は利用できません',
+            savedColors: '保存したカラー', showAll: 'すべて表示', showLess: '折りたたむ', newColor: '新しいカラー', colorFormat: 'カラーフォーマット',
+            backToInspector: 'インスペクターに戻る', searchHex: 'HEX コードを検索…', filterColors: 'カラーを絞り込む', allColors: 'すべて',
+            sortColors: 'カラーを並べ替える', sortRecent: '新しい順', sortOldest: '古い順', sortHex: 'HEX コード', noSearchResults: '一致するカラーがありません', colorResults: '色を表示中',
+            copiedFormat: 'コピー済み', colorSelected: '選択中', favoriteState: 'お気に入り',
+            saveColor: 'カラーを保存', invalidColor: '有効なカラーを入力してください', saturationBrightness: '彩度と明るさ',
+            hexValue: 'HEX コード', hue: '色相', red: '赤', green: '緑', blue: '青', saturation: '彩度', lightness: '明るさ'
+        },
+        ru: {
+            currentColor: 'Текущий цвет', copyCurrentColor: 'Копировать текущий цвет', favoriteAction: 'Избранное',
+            preview: 'Предпросмотр', previewCaption: 'Проверьте цвет в контексте', previewFont: 'Шрифт предпросмотра',
+            textPreview: 'Текст', buttonPreview: 'Кнопка', values: 'Значения', copyHint: 'Выберите строку для копирования',
+            codeCaption: 'CSS, Tailwind, SwiftUI и React', library: 'Библиотека', recents: 'Недавние',
+            manage: 'Управлять', done: 'Готово', manageColors: 'Управлять цветами', moreTools: 'Другие инструменты Bitek',
+            copyFailed: 'Не удалось скопировать', eyedropperUnsupported: 'Захват цвета недоступен',
+            savedColors: 'Сохранённые цвета', showAll: 'Показать все', showLess: 'Свернуть', newColor: 'Новый цвет', colorFormat: 'Формат цвета',
+            backToInspector: 'Назад к инспектору', searchHex: 'Найти HEX-код…', filterColors: 'Фильтровать цвета', allColors: 'Все',
+            sortColors: 'Сортировать цвета', sortRecent: 'Недавние', sortOldest: 'Старые', sortHex: 'HEX-код', noSearchResults: 'Совпадений нет', colorResults: 'цветов показано',
+            copiedFormat: 'Скопировано', colorSelected: 'выбрано', favoriteState: 'в избранном',
+            saveColor: 'Сохранить цвет', invalidColor: 'Введите корректный цвет', saturationBrightness: 'Насыщенность и яркость',
+            hexValue: 'HEX-код', hue: 'Тон', red: 'Красный', green: 'Зелёный', blue: 'Синий', saturation: 'Насыщенность', lightness: 'Светлота'
+        }
+    };
+
+    Object.entries(inspectorTranslations).forEach(([language, entries]) => {
+        Object.assign(translations[language], entries);
+    });
+
     init();
 
     function init() {
+        hydrateLucideIcons();
         loadSettings();
         loadColorHistory();
         loadFavoriteColors();
         setColor(DEFAULT_COLOR, { save: false });
         bindEvents();
+        initRingMotion();
         syncUsagePreview();
+        applyLocalPreviewState();
+    }
+
+    function hydrateLucideIcons() {
+        document.querySelectorAll('[data-lucide-icon]').forEach((slot) => {
+            slot.replaceChildren(createLucideIcon(slot.dataset.lucideIcon));
+        });
+    }
+
+    function applyLocalPreviewState() {
+        if (!['127.0.0.1', 'localhost'].includes(window.location.hostname)) return;
+        const params = new URLSearchParams(window.location.search);
+        const state = params.get('state') || 'default';
+        const mockEyeDropperColor = params.get('mock-eyedropper');
+
+        if (mockEyeDropperColor && isValidHex(mockEyeDropperColor)) {
+            window.EyeDropper = class LocalPreviewEyeDropper {
+                async open() {
+                    await wait(420);
+                    return { sRGBHex: mockEyeDropperColor.toUpperCase() };
+                }
+            };
+        }
+
+        const requestedView = params.get('view');
+        if (!['details', 'library'].includes(requestedView)) {
+            if (state === 'picking') window.requestAnimationFrame(enterPickingState);
+            if (state === 'motion-cycle') window.requestAnimationFrame(runMotionPreviewCycle);
+            return;
+        }
+
+        const previewColor = params.get('color');
+        if (previewColor && isValidHex(previewColor)) {
+            setColor(previewColor, { save: false });
+        }
+        if (state === 'saved-library-target') {
+            colorHistory = [
+                '#FFFFFF', '#6FA8F5', '#17191F', '#C764D5', '#F96B00',
+                '#2F853D', '#08274D', '#6D7278', '#2563EB', '#06B6D4'
+            ];
+            currentCollection = 'history';
+            setColor('#F96B00', { save: false });
+        }
+        if (state === 'saved-library-all-target') {
+            colorHistory = [
+                '#F96B00', '#6FA8F5', '#17191F', '#C764D5',
+                '#FFFFFF', '#34C759', '#FF375F', '#FFD60A'
+            ];
+            favoriteColors = [];
+            savedLibraryFilter = 'history';
+            savedLibrarySort = 'recent';
+            savedLibrarySearch = '';
+            setColor('#F96B00', { save: false });
+            setSavedLibraryFilter('history');
+            els.savedLibrarySortSelect.value = 'recent';
+            renderSavedLibrary();
+        }
+        showView(requestedView === 'library' ? 'library' : 'details');
+        const previewTheme = params.get('theme');
+        if (previewTheme === 'light' || previewTheme === 'dark') {
+            settings.theme = previewTheme;
+            applySettings();
+        }
+
+        if (state === 'favorites') {
+            if (!isFavoriteColor(currentColor)) favoriteColors = [currentColor];
+            updateFavoriteControl();
+            setCollection('favorites');
+            setInspectorTool('library');
+        }
+        if (state === 'empty') {
+            favoriteColors = [];
+            if (requestedView === 'library') colorHistory = [];
+            updateFavoriteControl();
+            if (requestedView === 'library') {
+                setSavedLibraryFilter('history');
+            } else {
+                setCollection('favorites');
+                setInspectorTool('library');
+            }
+        }
+
+        window.requestAnimationFrame(() => {
+            if (state === 'new-color-target') openNewColorEditor('details');
+            if (state === 'font') openInterfaceFontPicker();
+            if (state === 'settings') openSettings(document.querySelector('.settings-trigger'));
+            if (state === 'code') {
+                setInspectorTool('code');
+            }
+            if (state === 'manage') {
+                setInspectorTool('library');
+                toggleDeleteMode();
+            }
+            if (state === 'copy') showToast(t('copied'));
+            if (state === 'focus') els.backBtn.focus();
+            if (state === 'picking') enterPickingState();
+            if (state === 'motion-cycle') runMotionPreviewCycle();
+        });
+    }
+
+    function runMotionPreviewCycle() {
+        enterPickingState();
+        window.setTimeout(exitPickingState, 420);
+    }
+
+    function initRingMotion() {
+        if (!els.intelligenceRings.length || (reducedMotionQuery && reducedMotionQuery.matches)) {
+            document.documentElement.dataset.ringMotion = 'reduced';
+            return;
+        }
+
+        const sharedTime = performance.now() % RING_IDLE_DURATION;
+        ringAnimations = els.intelligenceRings.map((ring) => {
+            const animation = ring.animate(
+                [
+                    { transform: 'rotate(0deg)' },
+                    { transform: 'rotate(360deg)' }
+                ],
+                {
+                    duration: RING_IDLE_DURATION,
+                    iterations: Infinity,
+                    easing: 'linear'
+                }
+            );
+            animation.currentTime = sharedTime;
+            animation.playbackRate = ringPlaybackRate;
+            return animation;
+        });
+        document.documentElement.dataset.ringMotion = 'idle';
+    }
+
+    function setRingMotion(active) {
+        document.documentElement.dataset.ringMotion = active ? 'active' : 'idle';
+        if (!ringAnimations.length) return;
+
+        const targetRate = active ? RING_ACTIVE_RATE : RING_IDLE_RATE;
+        const duration = active ? 260 : 650;
+        const startRate = ringPlaybackRate;
+        const startedAt = performance.now();
+
+        if (ringRateFrame) window.cancelAnimationFrame(ringRateFrame);
+
+        const update = (now) => {
+            const progress = Math.min(1, (now - startedAt) / duration);
+            const eased = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            ringPlaybackRate = startRate + (targetRate - startRate) * eased;
+
+            ringAnimations.forEach((animation) => {
+                animation.playbackRate = ringPlaybackRate;
+            });
+
+            if (progress < 1) {
+                ringRateFrame = window.requestAnimationFrame(update);
+            } else {
+                ringPlaybackRate = targetRate;
+                ringRateFrame = 0;
+            }
+        };
+
+        ringRateFrame = window.requestAnimationFrame(update);
     }
 
     function bindEvents() {
         els.pickBtn.addEventListener('click', pickColor);
-        els.heroSwatch.addEventListener('click', pickColor);
+        els.heroSwatch.addEventListener('click', () => {
+            if (isCreatingColor) {
+                els.newColorSv.focus();
+                return;
+            }
+            pickColor();
+        });
         els.historyOpenBtn.addEventListener('click', () => showView('details'));
-        els.backBtn.addEventListener('click', () => showView('capture'));
+        els.backBtn.addEventListener('click', () => {
+            if (isCreatingColor) {
+                closeNewColorEditor({ save: false });
+                return;
+            }
+            showView('capture');
+        });
         els.usageInput.addEventListener('input', syncUsagePreview);
         els.previewFontTrigger.addEventListener('click', toggleFontPicker);
         els.fontSearch.addEventListener('input', renderFontOptions);
@@ -704,19 +1056,66 @@ document.addEventListener('DOMContentLoaded', () => {
         els.fontList.addEventListener('scroll', updateFontScrollbar);
         window.addEventListener('resize', updateFontScrollbar);
         document.addEventListener('click', closeFontPickerFromOutside);
-        document.addEventListener('click', closeCollectionDropdownFromOutside);
+        document.addEventListener('keydown', handleGlobalKeydown);
 
-        els.collectionTrigger.addEventListener('click', toggleCollectionDropdown);
         document.querySelectorAll('.history-selector-option').forEach((button) => {
             button.addEventListener('click', () => {
                 setCollection(button.dataset.collection);
-                closeCollectionDropdown();
             });
+            button.addEventListener('keydown', handleCollectionKeydown);
         });
+        els.colorFormatTabs.forEach((button) => {
+            button.addEventListener('click', () => selectColorFormat(button.dataset.colorFormat));
+            button.addEventListener('keydown', handleColorFormatKeydown);
+        });
+        els.savedColorsMore.addEventListener('click', openSavedLibrary);
+        els.savedLibraryBack.addEventListener('click', closeSavedLibrary);
+        els.savedLibraryAdd.addEventListener('click', () => openNewColorEditor('library'));
+        els.savedLibrarySearchInput.addEventListener('input', (event) => {
+            savedLibrarySearch = event.target.value;
+            renderSavedLibrary();
+        });
+        els.savedLibraryFilters.forEach((button) => {
+            button.addEventListener('click', () => setSavedLibraryFilter(button.dataset.libraryFilter));
+            button.addEventListener('keydown', handleSavedLibraryFilterKeydown);
+        });
+        els.savedLibrarySortSelect.addEventListener('change', (event) => {
+            savedLibrarySort = ['recent', 'oldest', 'hex'].includes(event.target.value)
+                ? event.target.value
+                : 'recent';
+            renderSavedLibrary();
+        });
+        els.newColorSv.addEventListener('pointerdown', handleNewColorSvPointerDown);
+        els.newColorSv.addEventListener('pointermove', handleNewColorSvPointerMove);
+        els.newColorSv.addEventListener('pointerup', handleNewColorSvPointerEnd);
+        els.newColorSv.addEventListener('pointercancel', handleNewColorSvPointerEnd);
+        els.newColorSv.addEventListener('keydown', handleNewColorSvKeydown);
+        els.newColorHue.addEventListener('input', handleNewColorHueInput);
+        els.newColorHue.addEventListener('keydown', handleNewColorHueKeydown);
+        els.newColorFormatTabs.forEach((button) => {
+            button.addEventListener('click', () => selectNewColorFormat(button.dataset.newColorFormat));
+            button.addEventListener('keydown', handleNewColorFormatKeydown);
+        });
+        [els.newColorHex, els.newColorR, els.newColorG, els.newColorB, els.newColorH, els.newColorS, els.newColorL]
+            .forEach((input) => input.addEventListener('input', handleNewColorValueInput));
+        els.newColorSave.addEventListener('click', () => closeNewColorEditor({ save: true }));
+        els.historyRow.addEventListener('pointerdown', startHistoryDrag);
+        els.historyRow.addEventListener('pointermove', moveHistoryDrag);
+        els.historyRow.addEventListener('pointerup', endHistoryDrag);
+        els.historyRow.addEventListener('pointercancel', endHistoryDrag);
+        els.historyRow.addEventListener('click', preventClickAfterHistoryDrag, true);
+        els.historyRow.addEventListener('wheel', scrollHistoryWithWheel, { passive: false });
         els.clearCollectionBtn.addEventListener('click', toggleDeleteMode);
+        els.heroFavoriteBtn.addEventListener('click', () => toggleFavorite(currentColor));
+        els.heroCopyBtn.addEventListener('click', () => copyToClipboard(getCopyValue(currentValueFormat), true, els.heroCopyBtn));
+        els.codeDisclosure.addEventListener('click', toggleCodePanel);
+        els.inspectorToolTabs.forEach((button) => {
+            button.addEventListener('click', () => setInspectorTool(button.dataset.toolPanel));
+            button.addEventListener('keydown', handleInspectorToolKeydown);
+        });
 
         document.querySelectorAll('.settings-trigger').forEach((button) => {
-            button.addEventListener('click', () => els.settingsModal.classList.remove('hidden'));
+            button.addEventListener('click', () => openSettings(button));
         });
 
         document.querySelectorAll('#coffee-btn, .coffee-trigger').forEach((button) => {
@@ -725,9 +1124,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        els.closeSettings.addEventListener('click', () => els.settingsModal.classList.add('hidden'));
+        els.closeSettings.addEventListener('click', closeSettingsModal);
         els.settingsModal.addEventListener('click', (event) => {
-            if (event.target === els.settingsModal) els.settingsModal.classList.add('hidden');
+            if (event.target === els.settingsModal) closeSettingsModal();
         });
 
         els.languageSelect.addEventListener('change', (event) => {
@@ -748,23 +1147,217 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelectorAll('.code-tab').forEach((button) => {
-            button.addEventListener('click', () => {
-                currentCodeFormat = button.dataset.codeFormat;
-                document.querySelectorAll('.code-tab').forEach((tab) => tab.classList.toggle('active', tab === button));
-                updateCodeOutput();
-            });
+            button.addEventListener('click', () => selectCodeFormat(button));
+            button.addEventListener('keydown', handleCodeTabKeydown);
         });
 
         document.querySelectorAll('.copy-action').forEach((button) => {
-            button.addEventListener('click', () => copyToClipboard(getCopyValue(button.dataset.copyKind)));
+            button.addEventListener('click', async (event) => {
+                const isFormatRow = button.classList.contains('format-row');
+                await copyToClipboard(
+                    getCopyValue(button.dataset.copyKind),
+                    !isFormatRow,
+                    isFormatRow ? null : button
+                );
+                if (isFormatRow && event.detail > 0) button.blur();
+            });
         });
+
+        if (systemThemeQuery) {
+            systemThemeQuery.addEventListener('change', () => {
+                if (settings.theme === 'system') applyTheme();
+            });
+        }
+    }
+
+    function openSettings(trigger) {
+        lastFocusedBeforeModal = trigger || document.activeElement;
+        els.settingsModal.classList.remove('hidden');
+        els.settingsModal.setAttribute('aria-hidden', 'false');
+        window.setTimeout(() => els.closeSettings.focus(), 0);
+    }
+
+    function closeSettingsModal() {
+        els.settingsModal.classList.add('hidden');
+        els.settingsModal.setAttribute('aria-hidden', 'true');
+        if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+            lastFocusedBeforeModal.focus();
+        }
+    }
+
+    function handleGlobalKeydown(event) {
+        if (event.key === 'Escape') {
+            if (!els.settingsModal.classList.contains('hidden')) {
+                event.preventDefault();
+                closeSettingsModal();
+                return;
+            }
+            if (!els.fontPickerPanel.classList.contains('hidden')) {
+                event.preventDefault();
+                closeFontPicker();
+                els.previewFontTrigger.focus();
+                return;
+            }
+            if (isCreatingColor) {
+                event.preventDefault();
+                closeNewColorEditor({ save: false });
+                return;
+            }
+            if (activeView === 'library') {
+                event.preventDefault();
+                closeSavedLibrary();
+            }
+        }
+
+        if (event.key === 'Tab' && !els.settingsModal.classList.contains('hidden')) {
+            const focusable = Array.from(els.settingsModal.querySelectorAll('button, select, input, a[href], [tabindex]:not([tabindex="-1"])'))
+                .filter((element) => !element.disabled && !element.classList.contains('hidden'));
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    }
+
+    function toggleCodePanel() {
+        const willOpen = els.codePanel.classList.contains('hidden');
+        els.codePanel.classList.toggle('hidden', !willOpen);
+        els.codeDisclosure.setAttribute('aria-expanded', String(willOpen));
+    }
+
+    function setInspectorTool(tool) {
+        els.inspectorToolTabs.forEach((button) => {
+            const selected = button.dataset.toolPanel === tool;
+            button.classList.toggle('active', selected);
+            button.setAttribute('aria-selected', String(selected));
+            button.tabIndex = selected ? 0 : -1;
+        });
+
+        els.inspectorToolPanels.forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.toolPanelContent !== tool);
+        });
+
+        if (tool === 'code') {
+            els.codePanel.classList.remove('hidden');
+            els.codeDisclosure.setAttribute('aria-expanded', 'true');
+        }
+        closeFontPicker();
+    }
+
+    function handleInspectorToolKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const tabs = els.inspectorToolTabs;
+        const currentIndex = tabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        setInspectorTool(tabs[nextIndex].dataset.toolPanel);
+        tabs[nextIndex].focus();
+    }
+
+    function selectCodeFormat(button) {
+        currentCodeFormat = button.dataset.codeFormat;
+        document.querySelectorAll('.code-tab').forEach((tab) => {
+            const isActive = tab === button;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+            tab.tabIndex = isActive ? 0 : -1;
+        });
+        updateCodeOutput();
+    }
+
+    function handleCodeTabKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const tabs = Array.from(document.querySelectorAll('.code-tab'));
+        const currentIndex = tabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        event.preventDefault();
+        selectCodeFormat(tabs[nextIndex]);
+        tabs[nextIndex].focus();
+    }
+
+    function handleCollectionKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const tabs = Array.from(document.querySelectorAll('.history-selector-option'));
+        const currentIndex = tabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        event.preventDefault();
+        tabs[nextIndex].focus();
+        setCollection(tabs[nextIndex].dataset.collection);
+    }
+
+    function handleSavedLibraryFilterKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const tabs = els.savedLibraryFilters;
+        const currentIndex = tabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        event.preventDefault();
+        setSavedLibraryFilter(tabs[nextIndex].dataset.libraryFilter, true);
+    }
+
+    function setSavedLibraryFilter(filter, moveFocus = false) {
+        savedLibraryFilter = filter === 'favorites' ? 'favorites' : 'history';
+        els.savedLibraryFilters.forEach((button) => {
+            const selected = button.dataset.libraryFilter === savedLibraryFilter;
+            button.classList.toggle('active', selected);
+            button.setAttribute('aria-selected', String(selected));
+            button.tabIndex = selected ? 0 : -1;
+            if (selected && moveFocus) button.focus();
+        });
+        renderSavedLibrary();
+    }
+
+    function selectColorFormat(format, moveFocus = false) {
+        if (!COLOR_VALUE_FORMATS.includes(format)) return;
+        currentValueFormat = format;
+        els.colorFormatTabs.forEach((button) => {
+            const selected = button.dataset.colorFormat === currentValueFormat;
+            button.classList.toggle('active', selected);
+            button.setAttribute('aria-selected', String(selected));
+            button.tabIndex = selected ? 0 : -1;
+            if (selected && moveFocus) button.focus();
+        });
+        updateColorFormatControl();
+    }
+
+    function handleColorFormatKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const currentIndex = els.colorFormatTabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = els.colorFormatTabs.length - 1;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + els.colorFormatTabs.length) % els.colorFormatTabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % els.colorFormatTabs.length;
+        event.preventDefault();
+        selectColorFormat(els.colorFormatTabs[nextIndex].dataset.colorFormat, true);
     }
 
     async function pickColor() {
         if (isPicking) return;
 
         if (!window.EyeDropper) {
-            showToast(t('error'));
+            showToast(t('eyedropperUnsupported'), 'error');
             return;
         }
 
@@ -785,27 +1378,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showView(view) {
-        const isDetails = view === 'details';
-        els.captureView.classList.toggle('hidden', isDetails);
-        els.detailsView.classList.toggle('hidden', !isDetails);
-        els.detailsView.setAttribute('aria-hidden', String(!isDetails));
+        activeView = ['capture', 'details', 'library'].includes(view) ? view : 'capture';
+        if (activeView !== 'details') closeFontPicker();
+        const views = [
+            [els.captureView, 'capture'],
+            [els.detailsView, 'details'],
+            [els.savedLibraryView, 'library']
+        ];
+        views.forEach(([element, name]) => {
+            const visible = activeView === name;
+            element.classList.toggle('hidden', !visible);
+            element.setAttribute('aria-hidden', String(!visible));
+        });
+    }
+
+    function openSavedLibrary() {
+        savedLibraryFilter = 'history';
+        savedLibrarySort = 'recent';
+        savedLibrarySearch = '';
+        els.savedLibrarySearchInput.value = '';
+        els.savedLibrarySortSelect.value = savedLibrarySort;
+        setSavedLibraryFilter(savedLibraryFilter);
+        showView('library');
+        window.requestAnimationFrame(() => els.savedLibrarySearchInput.focus());
+    }
+
+    function closeSavedLibrary() {
+        showView('details');
+        window.requestAnimationFrame(() => els.savedColorsMore.focus());
     }
 
     function enterPickingState() {
         isPicking = true;
+        setRingMotion(true);
         els.pickBtn.classList.remove('picked-success');
         els.heroSwatch.classList.remove('picked-success');
         els.pickBtn.classList.add('is-picking');
         els.heroSwatch.classList.add('is-picking');
-        els.captureTitle.textContent = t('pickingCta');
         els.captureFeedback.classList.add('hidden');
     }
 
     function exitPickingState() {
         isPicking = false;
+        setRingMotion(false);
         els.pickBtn.classList.remove('is-picking');
         els.heroSwatch.classList.remove('is-picking');
-        els.captureTitle.textContent = t('captureCta');
     }
 
     async function showPickedSuccess(hex) {
@@ -824,10 +1441,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isValidHex(hex)) return;
         currentColor = hex.toUpperCase();
         document.documentElement.style.setProperty('--selected-color', currentColor);
+        document.documentElement.style.setProperty('--selected-contrast', readableForeground(currentColor));
 
         const rgb = hexToRgb(currentColor);
         const hsl = hexToHsl(currentColor);
-        const oklch = currentColor === DEFAULT_COLOR ? '0.62, 0.16, 250' : hexToOklch(currentColor);
+        const oklch = hexToOklch(currentColor);
 
         els.formatHex.textContent = currentColor;
         els.rgbValue.textContent = rgb;
@@ -837,7 +1455,10 @@ document.addEventListener('DOMContentLoaded', () => {
         syncUsagePreview();
         updateCodeOutput();
         if (options.save) addToHistory(currentColor);
-        renderHistory();
+        updateColorFormatControl();
+        updateCopyLabels();
+        updateFavoriteControl();
+        if (!options.save && options.renderCollections !== false) renderHistory();
     }
 
     function wait(ms) {
@@ -845,9 +1466,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function syncUsagePreview() {
-        const value = els.usageInput.value.trim() || 'Texte';
-        els.usageButton.textContent = 'Bouton';
+        const value = els.usageInput.value.trim() || t('textPreview');
+        els.usageButton.textContent = value;
         els.usageText.textContent = value;
+    }
+
+    function readableForeground(hex) {
+        const rgb = hexToRgbObject(hex);
+        const luminance = [rgb.r, rgb.g, rgb.b]
+            .map((channel) => channel / 255)
+            .map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4))
+            .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+        const whiteContrast = 1.05 / (luminance + 0.05);
+        const blackContrast = (luminance + 0.05) / 0.05;
+        return whiteContrast >= blackContrast ? '#FFFFFF' : '#0B0B0F';
+    }
+
+    function updateCopyLabels() {
+        const values = {
+            hex: currentColor,
+            rgb: els.rgbValue.textContent,
+            hsl: els.hslValue.textContent,
+            oklch: els.oklchValue.textContent
+        };
+        document.querySelectorAll('.format-row').forEach((button) => {
+            const kind = button.dataset.copyKind;
+            button.setAttribute('aria-label', `${t('copyHex').replace('HEX', kind.toUpperCase())} ${values[kind]}`);
+        });
+        updateColorFormatControl();
+        els.heroSwatch.setAttribute('aria-label', t('pickColor'));
+    }
+
+    function updateColorFormatControl() {
+        const value = getCopyValue(currentValueFormat);
+        const formatLabel = currentValueFormat.toUpperCase();
+        els.currentColorHex.textContent = value;
+        els.currentColorHex.dataset.format = currentValueFormat;
+        els.heroCopyBtn.setAttribute('aria-label', `${t('copyHex').replace('HEX', formatLabel)} ${value}`);
+        els.heroCopyBtn.title = t('copyHex').replace('HEX', formatLabel);
+    }
+
+    function updateFavoriteControl() {
+        const favorite = isFavoriteColor(currentColor);
+        els.heroFavoriteBtn.classList.toggle('active', favorite);
+        els.heroFavoriteBtn.setAttribute('aria-pressed', String(favorite));
+        els.heroFavoriteBtn.setAttribute('aria-label', favorite ? t('removeFavorite') : t('addFavorite'));
     }
 
     function updateCodeOutput() {
@@ -880,107 +1543,468 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderHistory() {
         els.colorHistory.textContent = '';
-        els.historyCount.textContent = String(Math.min(colorHistory.length, 2));
+        els.historyCount.textContent = String(Math.min(colorHistory.length, MAX_HISTORY));
 
         const colors = currentCollection === 'favorites'
             ? favoriteColors.slice(0, MAX_HISTORY)
             : colorHistory.slice(0, MAX_HISTORY);
+        const visibleColors = colors.slice(0, COLLAPSED_SAVED_COLORS);
 
         if (!colors.length) {
             const empty = document.createElement('p');
             empty.className = 'history-empty';
             empty.textContent = currentCollection === 'favorites' ? t('noFavorites') : t('noHistory');
             els.colorHistory.appendChild(empty);
-            return;
         }
 
-        colors.slice(0, MAX_HISTORY).forEach((hex) => {
+        visibleColors.forEach((hex) => {
             if (!isValidHex(hex)) return;
-            const isFavorite = isFavoriteColor(hex);
+            const isSelected = hex.toLowerCase() === currentColor.toLowerCase();
             const card = document.createElement('div');
-            card.className = `history-card${hex.toLowerCase() === currentColor.toLowerCase() ? ' active' : ''}`;
+            card.className = `history-card${isSelected ? ' active' : ''}`;
             card.style.setProperty('--history-color', hex);
 
             const colorButton = document.createElement('button');
             colorButton.type = 'button';
             colorButton.className = 'history-color-button';
             colorButton.title = hex.toUpperCase();
+            const stateLabels = [];
+            if (isSelected) stateLabels.push(t('colorSelected'));
+            colorButton.setAttribute('aria-label', `${hex.toUpperCase()}, RGB ${hexToRgb(hex)}${stateLabels.length ? `, ${stateLabels.join(', ')}` : ''}`);
+            colorButton.setAttribute('aria-pressed', String(isSelected));
 
             const swatch = document.createElement('span');
             swatch.className = 'history-swatch';
-            const label = document.createElement('span');
+            swatch.setAttribute('aria-hidden', 'true');
+
+            const meta = document.createElement('span');
+            meta.className = 'saved-library-meta history-meta';
+            const label = document.createElement('strong');
             label.className = 'history-label';
             label.textContent = hex.toUpperCase();
-
-            const actionButton = document.createElement('button');
-            actionButton.type = 'button';
+            const rgbLabel = document.createElement('span');
+            rgbLabel.className = 'history-rgb';
+            rgbLabel.textContent = `RGB ${hexToRgb(hex)}`;
+            meta.append(label, rgbLabel);
+            colorButton.append(swatch, meta);
+            colorButton.addEventListener('click', () => setColor(hex, { save: false }));
 
             if (isDeleteMode) {
+                colorButton.disabled = true;
+                const actionButton = document.createElement('button');
+                actionButton.type = 'button';
                 actionButton.className = 'history-delete-toggle';
                 actionButton.setAttribute('aria-label', `${t('removeColor')} ${hex.toUpperCase()}`);
-                actionButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path></svg>';
+                actionButton.innerHTML = '<span aria-hidden="true">−</span>';
                 actionButton.addEventListener('click', () => removeColorFromCurrentCollection(hex));
+                card.append(colorButton, actionButton);
             } else {
-                actionButton.className = `favorite-toggle${isFavorite ? ' active' : ''}`;
-                actionButton.setAttribute('aria-label', isFavorite ? t('removeFavorite') : t('addFavorite'));
-                actionButton.innerHTML = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.8 22 9.3 16.7 13.9 18.4 21 12 17.2 5.6 21 7.3 13.9 2 9.3 9 8.8 12 2"></polygon></svg>';
-                actionButton.addEventListener('click', () => toggleFavorite(hex));
+                card.append(colorButton);
             }
 
-            colorButton.append(swatch, label);
-            colorButton.addEventListener('click', () => setColor(hex, { save: false }));
-            card.append(colorButton, actionButton);
             els.colorHistory.appendChild(card);
         });
+
+        const newColorButton = document.createElement('button');
+        newColorButton.type = 'button';
+        newColorButton.className = 'history-new-color';
+        newColorButton.setAttribute('aria-label', t('newColor'));
+        newColorButton.innerHTML = `
+            <span class="history-new-color-icon" aria-hidden="true">+</span>
+            <span class="history-new-color-label">${t('newColor')}</span>`;
+        newColorButton.addEventListener('click', () => openNewColorEditor('details'));
+        els.colorHistory.appendChild(newColorButton);
+        updateSavedColorsDisclosure(colors.length);
+        renderSavedLibrary();
+    }
+
+    function renderSavedLibrary() {
+        if (!els.savedLibraryGrid) return;
+
+        const source = savedLibraryFilter === 'favorites' ? favoriteColors : colorHistory;
+        const query = savedLibrarySearch.trim().replace(/\s+/g, '').replace(/^#/, '').toUpperCase();
+        let colors = source
+            .filter(isValidHex)
+            .filter((hex) => !query || hex.slice(1).toUpperCase().includes(query));
+
+        if (savedLibrarySort === 'oldest') colors = colors.slice().reverse();
+        if (savedLibrarySort === 'hex') colors = colors.slice().sort((a, b) => a.localeCompare(b));
+
+        els.savedLibraryGrid.textContent = '';
+        els.savedLibraryStatus.textContent = `${colors.length} ${t('colorResults')}`;
+
+        if (!colors.length) {
+            const empty = document.createElement('p');
+            empty.className = 'saved-library-empty';
+            empty.setAttribute('role', 'status');
+            empty.textContent = query
+                ? t('noSearchResults')
+                : (savedLibraryFilter === 'favorites' ? t('noFavorites') : t('noHistory'));
+            els.savedLibraryGrid.appendChild(empty);
+            return;
+        }
+
+        colors.forEach((hex) => {
+            const normalized = hex.toUpperCase();
+            const isSelected = normalized === currentColor.toUpperCase();
+            const isFavorite = isFavoriteColor(normalized);
+            const card = document.createElement('article');
+            card.className = `saved-library-card${isSelected ? ' active' : ''}`;
+            card.style.setProperty('--library-color', normalized);
+            card.setAttribute('role', 'listitem');
+
+            const colorButton = document.createElement('button');
+            colorButton.type = 'button';
+            colorButton.className = 'saved-library-color-button';
+            colorButton.setAttribute('aria-pressed', String(isSelected));
+            colorButton.setAttribute('aria-label', `${normalized}, RGB ${hexToRgb(normalized)}${isSelected ? `, ${t('colorSelected')}` : ''}`);
+
+            const swatch = document.createElement('span');
+            swatch.className = 'saved-library-swatch';
+            swatch.setAttribute('aria-hidden', 'true');
+
+            const meta = document.createElement('span');
+            meta.className = 'saved-library-meta';
+            const hexLabel = document.createElement('strong');
+            hexLabel.textContent = normalized;
+            const rgbLabel = document.createElement('span');
+            rgbLabel.textContent = `RGB ${hexToRgb(normalized)}`;
+            meta.append(hexLabel, rgbLabel);
+            colorButton.append(swatch, meta);
+            colorButton.addEventListener('click', () => {
+                setColor(normalized, { save: false });
+                showView('details');
+                window.requestAnimationFrame(() => els.heroSwatch.focus());
+            });
+
+            const favoriteButton = document.createElement('button');
+            favoriteButton.type = 'button';
+            favoriteButton.className = `saved-library-favorite${isFavorite ? ' active' : ''}`;
+            favoriteButton.dataset.color = normalized;
+            favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+            favoriteButton.setAttribute('aria-label', `${t(isFavorite ? 'removeFavorite' : 'addFavorite')} ${normalized}`);
+            favoriteButton.title = t(isFavorite ? 'removeFavorite' : 'addFavorite');
+            favoriteButton.append(createLucideIcon('Star'));
+            favoriteButton.addEventListener('click', () => {
+                const shouldRestoreFilterFocus = savedLibraryFilter === 'favorites' && isFavorite;
+                toggleFavorite(normalized);
+                window.requestAnimationFrame(() => {
+                    if (shouldRestoreFilterFocus) {
+                        const selectedFilter = els.savedLibraryFilters.find((button) => button.dataset.libraryFilter === savedLibraryFilter);
+                        if (selectedFilter) selectedFilter.focus();
+                        return;
+                    }
+                    const restoredFavorite = Array.from(els.savedLibraryGrid.querySelectorAll('.saved-library-favorite'))
+                        .find((button) => button.dataset.color === normalized);
+                    if (restoredFavorite) restoredFavorite.focus();
+                });
+            });
+
+            card.append(colorButton, favoriteButton);
+            els.savedLibraryGrid.appendChild(card);
+        });
+    }
+
+    function openNewColorEditor(origin = activeView) {
+        newColorOrigin = origin === 'library' ? 'library' : 'details';
+        newColorOriginalColor = currentColor;
+        newColorDraft = hexToHsv(currentColor);
+        isCreatingColor = true;
+
+        showView('details');
+        els.detailsView.classList.add('is-creating-color');
+        els.newColorEditor.classList.remove('hidden');
+        els.newColorEditor.setAttribute('aria-hidden', 'false');
+        selectNewColorFormat('hex');
+        applyNewColorDraft();
+        window.requestAnimationFrame(() => els.newColorSv.focus());
+    }
+
+    function closeNewColorEditor({ save }) {
+        if (!isCreatingColor) return;
+        if (save && els.newColorSave.disabled) {
+            const invalidInput = getActiveNewColorInputs().find((input) => input.getAttribute('aria-invalid') === 'true');
+            if (invalidInput) invalidInput.focus();
+            return;
+        }
+
+        const destination = newColorOrigin;
+        const nextColor = save ? hsvToHex(newColorDraft) : newColorOriginalColor;
+        isCreatingColor = false;
+        newColorPointerId = null;
+        els.detailsView.classList.remove('is-creating-color');
+        els.newColorEditor.classList.add('hidden');
+        els.newColorEditor.setAttribute('aria-hidden', 'true');
+        setColor(nextColor, { save: Boolean(save) });
+        showView(destination);
+
+        window.requestAnimationFrame(() => {
+            if (destination === 'library') {
+                if (save) {
+                    const selected = els.savedLibraryGrid.querySelector('.saved-library-card.active .saved-library-color-button');
+                    if (selected) {
+                        selected.focus();
+                        return;
+                    }
+                }
+                els.savedLibraryAdd.focus();
+                return;
+            }
+
+            const target = save
+                ? els.colorHistory.querySelector('.history-card.active .history-color-button')
+                : els.colorHistory.querySelector('.history-new-color');
+            (target || els.heroSwatch).focus();
+        });
+    }
+
+    function applyNewColorDraft() {
+        const hex = hsvToHex(newColorDraft);
+        setColor(hex, { save: false, renderCollections: false });
+        setNewColorValidity(true);
+
+        const displayHue = Math.round(newColorDraft.h) % 360;
+        const displaySaturation = Math.round(newColorDraft.s);
+        const displayValue = Math.round(newColorDraft.v);
+        els.newColorEditor.style.setProperty('--new-color-hue', `${newColorDraft.h}deg`);
+        els.newColorEditor.style.setProperty('--new-color-saturation', `${newColorDraft.s}%`);
+        els.newColorEditor.style.setProperty('--new-color-value-position', `${100 - newColorDraft.v}%`);
+        els.newColorHue.value = String(displayHue);
+        els.newColorSv.setAttribute('aria-valuenow', String(displayValue));
+        els.newColorSv.setAttribute('aria-valuetext', `${t('saturation')} ${displaySaturation}%, ${t('lightness')} ${displayValue}%`);
+
+        const rgb = hexToRgbObject(hex);
+        const hsl = hexToHslObject(hex);
+        els.newColorHex.value = hex;
+        els.newColorR.value = String(rgb.r);
+        els.newColorG.value = String(rgb.g);
+        els.newColorB.value = String(rgb.b);
+        els.newColorH.value = String(hsl.h);
+        els.newColorS.value = String(hsl.s);
+        els.newColorL.value = String(hsl.l);
+    }
+
+    function setNewColorValidity(valid) {
+        getActiveNewColorInputs().forEach((input) => input.setAttribute('aria-invalid', String(!valid)));
+        els.newColorSave.disabled = !valid;
+        els.newColorStatus.textContent = valid ? '' : t('invalidColor');
+    }
+
+    function getActiveNewColorInputs() {
+        const panel = els.newColorPanels.find((candidate) => candidate.dataset.newColorPanel === newColorFormat);
+        return panel ? Array.from(panel.querySelectorAll('input')) : [];
+    }
+
+    function selectNewColorFormat(format, moveFocus = false) {
+        if (!COLOR_VALUE_FORMATS.includes(format)) return;
+        newColorFormat = format;
+        els.newColorFormatTabs.forEach((button) => {
+            const selected = button.dataset.newColorFormat === newColorFormat;
+            button.classList.toggle('active', selected);
+            button.setAttribute('aria-selected', String(selected));
+            button.tabIndex = selected ? 0 : -1;
+            if (selected && moveFocus) button.focus();
+        });
+        els.newColorPanels.forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.newColorPanel !== newColorFormat);
+        });
+        setNewColorValidity(true);
+    }
+
+    function handleNewColorFormatKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const currentIndex = els.newColorFormatTabs.indexOf(event.currentTarget);
+        let nextIndex = currentIndex;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = els.newColorFormatTabs.length - 1;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + els.newColorFormatTabs.length) % els.newColorFormatTabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % els.newColorFormatTabs.length;
+        event.preventDefault();
+        selectNewColorFormat(els.newColorFormatTabs[nextIndex].dataset.newColorFormat, true);
+    }
+
+    function handleNewColorValueInput() {
+        if (newColorFormat === 'hex') {
+            const value = els.newColorHex.value.trim().toUpperCase();
+            if (!isValidHex(value)) {
+                setNewColorValidity(false);
+                return;
+            }
+            newColorDraft = hexToHsv(value);
+            applyNewColorDraft();
+            return;
+        }
+
+        if (newColorFormat === 'rgb') {
+            const values = [els.newColorR, els.newColorG, els.newColorB].map((input) => parseIntegerInput(input, 0, 255));
+            if (values.some((value) => value === null)) {
+                setNewColorValidity(false);
+                return;
+            }
+            newColorDraft = hexToHsv(rgbToHex(values[0], values[1], values[2]));
+            applyNewColorDraft();
+            return;
+        }
+
+        const values = [
+            parseIntegerInput(els.newColorH, 0, 359),
+            parseIntegerInput(els.newColorS, 0, 100),
+            parseIntegerInput(els.newColorL, 0, 100)
+        ];
+        if (values.some((value) => value === null)) {
+            setNewColorValidity(false);
+            return;
+        }
+        newColorDraft = hexToHsv(hslToHex(values[0], values[1], values[2]));
+        applyNewColorDraft();
+    }
+
+    function parseIntegerInput(input, min, max) {
+        if (input.value.trim() === '') return null;
+        const value = Number(input.value);
+        if (!Number.isInteger(value) || value < min || value > max) return null;
+        return value;
+    }
+
+    function handleNewColorSvPointerDown(event) {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        newColorPointerId = event.pointerId;
+        els.newColorSv.setPointerCapture(event.pointerId);
+        updateNewColorSvFromPointer(event);
+    }
+
+    function handleNewColorSvPointerMove(event) {
+        if (newColorPointerId !== event.pointerId) return;
+        updateNewColorSvFromPointer(event);
+    }
+
+    function handleNewColorSvPointerEnd(event) {
+        if (newColorPointerId !== event.pointerId) return;
+        if (els.newColorSv.hasPointerCapture(event.pointerId)) els.newColorSv.releasePointerCapture(event.pointerId);
+        newColorPointerId = null;
+    }
+
+    function updateNewColorSvFromPointer(event) {
+        const rect = els.newColorSv.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        newColorDraft.s = Math.round(clamp((event.clientX - rect.left) / rect.width, 0, 1) * 100);
+        newColorDraft.v = Math.round((1 - clamp((event.clientY - rect.top) / rect.height, 0, 1)) * 100);
+        applyNewColorDraft();
+    }
+
+    function handleNewColorSvKeydown(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        const step = event.shiftKey ? 10 : 1;
+        if (event.key === 'ArrowLeft') newColorDraft.s = clamp(newColorDraft.s - step, 0, 100);
+        if (event.key === 'ArrowRight') newColorDraft.s = clamp(newColorDraft.s + step, 0, 100);
+        if (event.key === 'ArrowUp') newColorDraft.v = clamp(newColorDraft.v + step, 0, 100);
+        if (event.key === 'ArrowDown') newColorDraft.v = clamp(newColorDraft.v - step, 0, 100);
+        event.preventDefault();
+        applyNewColorDraft();
+    }
+
+    function handleNewColorHueInput(event) {
+        newColorDraft.h = clamp(Number(event.target.value), 0, 359);
+        applyNewColorDraft();
+    }
+
+    function handleNewColorHueKeydown(event) {
+        if (!event.shiftKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        const direction = ['ArrowRight', 'ArrowUp'].includes(event.key) ? 1 : -1;
+        event.preventDefault();
+        newColorDraft.h = clamp(newColorDraft.h + direction * 10, 0, 359);
+        applyNewColorDraft();
+    }
+
+    function updateSavedColorsDisclosure(colorCount = colorHistory.length) {
+        els.savedColorsMore.hidden = colorCount === 0;
+        els.savedColorsMore.textContent = t('showAll');
+        els.savedColorsMore.setAttribute('aria-label', t('showAll'));
+        els.colorHistory.classList.remove('is-expanded');
     }
 
     function setCollection(collection) {
         currentCollection = collection === 'favorites' ? 'favorites' : 'history';
         isDeleteMode = false;
         updateCollectionControl();
-        updateCollectionControl();
         updateCollectionTitle();
         renderHistory();
+        els.historyRow.scrollLeft = 0;
     }
 
     function updateCollectionControl() {
-        const labelKey = currentCollection === 'favorites' ? 'favorites' : 'history';
-        els.collectionLabel.textContent = t(labelKey);
         document.querySelectorAll('.history-selector-option').forEach((button) => {
             const isSelected = button.dataset.collection === currentCollection;
             button.setAttribute('aria-selected', String(isSelected));
+            button.tabIndex = isSelected ? 0 : -1;
         });
+        const colorCount = currentCollection === 'favorites' ? favoriteColors.length : colorHistory.length;
+        updateSavedColorsDisclosure(colorCount);
+    }
+
+    function startHistoryDrag(event) {
+        if (event.pointerType !== 'mouse' || event.button !== 0) return;
+        if (els.historyRow.scrollWidth <= els.historyRow.clientWidth) return;
+        historyDragState = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            scrollLeft: els.historyRow.scrollLeft,
+            dragging: false
+        };
+    }
+
+    function moveHistoryDrag(event) {
+        if (!historyDragState || event.pointerId !== historyDragState.pointerId) return;
+        const delta = event.clientX - historyDragState.startX;
+        if (!historyDragState.dragging && Math.abs(delta) < 5) return;
+        if (!historyDragState.dragging) {
+            historyDragState.dragging = true;
+            suppressHistoryClick = true;
+            els.historyRow.classList.add('is-dragging');
+            els.historyRow.setPointerCapture(event.pointerId);
+        }
+        event.preventDefault();
+        els.historyRow.scrollLeft = historyDragState.scrollLeft - delta;
+    }
+
+    function endHistoryDrag(event) {
+        if (!historyDragState || event.pointerId !== historyDragState.pointerId) return;
+        if (els.historyRow.hasPointerCapture(event.pointerId)) {
+            els.historyRow.releasePointerCapture(event.pointerId);
+        }
+        els.historyRow.classList.remove('is-dragging');
+        const dragged = historyDragState.dragging;
+        historyDragState = null;
+        if (dragged) window.setTimeout(() => { suppressHistoryClick = false; }, 0);
+    }
+
+    function preventClickAfterHistoryDrag(event) {
+        if (!suppressHistoryClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressHistoryClick = false;
+    }
+
+    function scrollHistoryWithWheel(event) {
+        if (els.historyRow.scrollWidth <= els.historyRow.clientWidth) return;
+        if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+        event.preventDefault();
+        els.historyRow.scrollLeft += event.deltaY;
     }
 
     function updateCollectionTitle() {
-        const labelKey = isDeleteMode ? 'exitDeleteMode' : 'enterDeleteMode';
+        const labelKey = isDeleteMode ? 'done' : 'manageColors';
         els.clearCollectionBtn.classList.toggle('active', isDeleteMode);
         els.clearCollectionBtn.setAttribute('aria-label', t(labelKey));
         els.clearCollectionBtn.title = t(labelKey);
+        const label = els.clearCollectionBtn.querySelector('.manage-label');
+        if (label) label.textContent = t(isDeleteMode ? 'done' : 'manage');
     }
 
     function toggleDeleteMode() {
         isDeleteMode = !isDeleteMode;
         updateCollectionTitle();
         renderHistory();
-    }
-
-    function toggleCollectionDropdown(event) {
-        event.stopPropagation();
-        const willOpen = els.collectionPanel.classList.contains('hidden');
-        els.collectionPanel.classList.toggle('hidden', !willOpen);
-        els.collectionTrigger.setAttribute('aria-expanded', String(willOpen));
-    }
-
-    function closeCollectionDropdown() {
-        els.collectionPanel.classList.add('hidden');
-        els.collectionTrigger.setAttribute('aria-expanded', 'false');
-    }
-
-    function closeCollectionDropdownFromOutside(event) {
-        if (els.collectionPanel.classList.contains('hidden')) return;
-        if (els.collectionPanel.contains(event.target) || els.collectionTrigger.contains(event.target)) return;
-        closeCollectionDropdown();
     }
 
     function removeColorFromCurrentCollection(hex) {
@@ -992,6 +2016,7 @@ document.addEventListener('DOMContentLoaded', () => {
             colorHistory = colorHistory.filter((item) => item.toLowerCase() !== normalized.toLowerCase());
             saveColorHistory();
         }
+        updateFavoriteControl();
         renderHistory();
     }
 
@@ -1004,6 +2029,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         favoriteColors = favoriteColors.filter(isValidHex).slice(0, MAX_HISTORY);
         saveFavoriteColors();
+        updateFavoriteControl();
         renderHistory();
     }
 
@@ -1025,6 +2051,7 @@ document.addEventListener('DOMContentLoaded', () => {
             favoriteColors = Array.isArray(result.favoriteColors)
                 ? result.favoriteColors.filter(isValidHex).slice(0, MAX_HISTORY)
                 : [];
+            updateFavoriteControl();
             renderHistory();
         });
     }
@@ -1037,17 +2064,29 @@ document.addEventListener('DOMContentLoaded', () => {
         storage.set({ favoriteColors });
     }
 
-    async function copyToClipboard(text, notify = true) {
+    async function copyToClipboard(text, notify = true, source = null) {
         try {
             await navigator.clipboard.writeText(text);
+            if (source) {
+                source.classList.add('copied');
+                source.dataset.copyState = t('copiedFormat');
+                window.setTimeout(() => {
+                    source.classList.remove('copied');
+                    delete source.dataset.copyState;
+                }, 1400);
+            }
             if (notify) showToast(t('copied'));
+            return true;
         } catch (error) {
             console.error('Copy failed:', error);
+            showToast(t('copyFailed'), 'error');
+            return false;
         }
     }
 
-    function showToast(message) {
+    function showToast(message, tone = 'success') {
         els.toastMessage.textContent = message;
+        els.toast.dataset.tone = tone;
         els.toast.classList.remove('hidden');
         els.toast.classList.add('show');
         window.setTimeout(() => {
@@ -1058,31 +2097,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadSettings() {
         storage.get(['settings'], (result) => {
-            if (result.settings && validateSettings(result.settings)) {
-                settings = {
-                    ...defaultSettings,
-                    ...result.settings,
-                    customColors: {
-                        ...defaultSettings.customColors,
-                        ...(result.settings.customColors || {})
-                    }
-                };
-            }
+            const hadLegacyInterfaceFont = Boolean(
+                result.settings
+                && typeof result.settings === 'object'
+                && Object.hasOwn(result.settings, 'interfaceFont')
+            );
+            settings = normalizeSettings(result.settings);
             applySettings();
             applyTranslations();
+            if (hadLegacyInterfaceFont) saveSettings();
         });
     }
 
-    function validateSettings(candidate) {
-        if (!candidate || typeof candidate !== 'object') return false;
-        if (candidate.language && !translations[candidate.language]) return false;
-        if (candidate.theme && !VALID_THEMES.includes(candidate.theme)) return false;
-        if (candidate.previewFont && !FONT_STACKS[candidate.previewFont]) return false;
-        return true;
+    function normalizeSettings(candidate) {
+        const source = candidate && typeof candidate === 'object' && !Array.isArray(candidate)
+            ? candidate
+            : {};
+        const sourceColors = source.customColors && typeof source.customColors === 'object' && !Array.isArray(source.customColors)
+            ? source.customColors
+            : {};
+        const customColors = Object.fromEntries(
+            Object.entries(defaultSettings.customColors).map(([key, fallback]) => [
+                key,
+                isValidHex(sourceColors[key]) ? sourceColors[key].toUpperCase() : fallback
+            ])
+        );
+
+        return {
+            language: translations[source.language] ? source.language : defaultSettings.language,
+            theme: VALID_THEMES.includes(source.theme) ? source.theme : defaultSettings.theme,
+            previewFont: FONT_STACKS[source.previewFont] ? source.previewFont : defaultSettings.previewFont,
+            customColors
+        };
     }
 
     function saveSettings() {
-        storage.set({ settings });
+        const snapshot = {
+            ...settings,
+            customColors: { ...settings.customColors }
+        };
+        storage.set({ settings: snapshot }, () => {
+            const error = typeof chrome !== 'undefined' && chrome.runtime
+                ? chrome.runtime.lastError
+                : null;
+            if (error) console.warn('Unable to persist settings:', error.message);
+        });
     }
 
     function applySettings() {
@@ -1095,11 +2154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         els.themeSelect.value = settings.theme;
 
-        let themeToApply = settings.theme;
-        if (settings.theme === 'system') {
-            themeToApply = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', themeToApply);
+        applyTheme();
 
         if (settings.theme === 'custom') {
             els.customControls.classList.remove('hidden');
@@ -1119,6 +2174,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.style.removeProperty('--text-primary');
             document.documentElement.style.removeProperty('--primary-color');
         }
+    }
+
+    function applyTheme() {
+        const themeToApply = settings.theme === 'system'
+            ? (systemThemeQuery && systemThemeQuery.matches ? 'dark' : 'light')
+            : settings.theme;
+        document.documentElement.setAttribute('data-theme', themeToApply);
+        document.documentElement.style.colorScheme = themeToApply;
     }
 
     function updateCustomColor(event) {
@@ -1197,7 +2260,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.key === 'Escape') {
             closeFontPicker();
             els.previewFontTrigger.focus();
+            return;
         }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            const options = Array.from(els.fontList.querySelectorAll('.font-option'));
+            if (!options.length) return;
+            event.preventDefault();
+            const target = event.key === 'ArrowDown' ? options[0] : options[options.length - 1];
+            target.focus();
+        }
+    }
+
+    function handleFontOptionKeydown(event) {
+        const options = Array.from(els.fontList.querySelectorAll('.font-option'));
+        const index = options.indexOf(event.currentTarget);
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeFontPicker();
+            els.previewFontTrigger.focus();
+            return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            updatePreviewFont(event.currentTarget.dataset.fontId);
+            els.previewFontTrigger.focus();
+            return;
+        }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        let nextIndex = index;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = options.length - 1;
+        if (event.key === 'ArrowDown') nextIndex = Math.min(options.length - 1, index + 1);
+        if (event.key === 'ArrowUp') nextIndex = Math.max(0, index - 1);
+        options[nextIndex].focus();
+        options[nextIndex].scrollIntoView({ block: 'nearest' });
     }
 
     function renderFontOptions() {
@@ -1240,6 +2337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             option.append(name, category, check);
             option.addEventListener('click', () => updatePreviewFont(font.id));
+            option.addEventListener('keydown', handleFontOptionKeydown);
             els.fontList.appendChild(option);
         });
         els.fontList.scrollTop = 0;
@@ -1295,6 +2393,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateCollectionTitle();
+        updateCollectionControl();
+        updateCopyLabels();
+        updateFavoriteControl();
+        syncUsagePreview();
+        refreshNewColorEditorLocalization();
     }
 
     function t(key) {
@@ -1307,12 +2410,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function refreshLocalizedDynamicText() {
-        if (isPicking) {
-            els.captureTitle.textContent = t('pickingCta');
-        } else {
-            els.captureTitle.textContent = t('captureCta');
-        }
+        updateCopyLabels();
+        updateFavoriteControl();
+        updateCollectionControl();
+        syncUsagePreview();
         renderHistory();
+        refreshNewColorEditorLocalization();
+    }
+
+    function refreshNewColorEditorLocalization() {
+        els.newColorSv.setAttribute('aria-valuetext', `${t('saturation')} ${Math.round(newColorDraft.s)}%, ${t('lightness')} ${Math.round(newColorDraft.v)}%`);
+        if (els.newColorSave.disabled) els.newColorStatus.textContent = t('invalidColor');
     }
 
     function renderPromoLink(element, text) {
@@ -1330,6 +2438,83 @@ document.addEventListener('DOMContentLoaded', () => {
         element.append(document.createTextNode(text.slice(index + 'bitek.fr'.length)));
     }
 
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function rgbToHex(r, g, b) {
+        const channel = (value) => Math.round(clamp(value, 0, 255)).toString(16).padStart(2, '0');
+        return `#${channel(r)}${channel(g)}${channel(b)}`.toUpperCase();
+    }
+
+    function hexToHsv(hex) {
+        const { r, g, b } = hexToRgbObject(hex);
+        const red = r / 255;
+        const green = g / 255;
+        const blue = b / 255;
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        const delta = max - min;
+        let hue = 0;
+
+        if (delta !== 0) {
+            if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+            if (max === green) hue = 60 * (((blue - red) / delta) + 2);
+            if (max === blue) hue = 60 * (((red - green) / delta) + 4);
+        }
+        if (hue < 0) hue += 360;
+
+        return {
+            h: hue,
+            s: (max === 0 ? 0 : delta / max) * 100,
+            v: max * 100
+        };
+    }
+
+    function hsvToHex({ h, s, v }) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = clamp(s, 0, 100) / 100;
+        const value = clamp(v, 0, 100) / 100;
+        const chroma = value * saturation;
+        const segment = hue / 60;
+        const x = chroma * (1 - Math.abs((segment % 2) - 1));
+        const match = value - chroma;
+        let red = 0;
+        let green = 0;
+        let blue = 0;
+
+        if (segment < 1) [red, green, blue] = [chroma, x, 0];
+        else if (segment < 2) [red, green, blue] = [x, chroma, 0];
+        else if (segment < 3) [red, green, blue] = [0, chroma, x];
+        else if (segment < 4) [red, green, blue] = [0, x, chroma];
+        else if (segment < 5) [red, green, blue] = [x, 0, chroma];
+        else [red, green, blue] = [chroma, 0, x];
+
+        return rgbToHex((red + match) * 255, (green + match) * 255, (blue + match) * 255);
+    }
+
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = clamp(s, 0, 100) / 100;
+        const lightness = clamp(l, 0, 100) / 100;
+        const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+        const segment = hue / 60;
+        const x = chroma * (1 - Math.abs((segment % 2) - 1));
+        const match = lightness - chroma / 2;
+        let red = 0;
+        let green = 0;
+        let blue = 0;
+
+        if (segment < 1) [red, green, blue] = [chroma, x, 0];
+        else if (segment < 2) [red, green, blue] = [x, chroma, 0];
+        else if (segment < 3) [red, green, blue] = [0, chroma, x];
+        else if (segment < 4) [red, green, blue] = [0, x, chroma];
+        else if (segment < 5) [red, green, blue] = [x, 0, chroma];
+        else [red, green, blue] = [chroma, 0, x];
+
+        return rgbToHex((red + match) * 255, (green + match) * 255, (blue + match) * 255);
+    }
+
     function hexToRgb(hex) {
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
@@ -1337,7 +2522,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${r}, ${g}, ${b}`;
     }
 
-    function hexToHsl(hex) {
+    function hexToRgbObject(hex) {
+        return {
+            r: parseInt(hex.slice(1, 3), 16),
+            g: parseInt(hex.slice(3, 5), 16),
+            b: parseInt(hex.slice(5, 7), 16)
+        };
+    }
+
+    function hexToHslObject(hex) {
         let r = parseInt(hex.slice(1, 3), 16) / 255;
         let g = parseInt(hex.slice(3, 5), 16) / 255;
         let b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -1356,7 +2549,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (max === b) h = ((r - g) / d + 4) / 6;
         }
 
-        return `${Math.round(h * 360)}°, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%`;
+        return {
+            h: Math.round(h * 360) % 360,
+            s: Math.round(s * 100),
+            l: Math.round(l * 100)
+        };
+    }
+
+    function hexToHsl(hex) {
+        const { h, s, l } = hexToHslObject(hex);
+        return `${h}°, ${s}%, ${l}%`;
     }
 
     function hexToOklch(hex) {

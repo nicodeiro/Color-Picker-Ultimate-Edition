@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Color Picker Ultimate Edition",
+    "description": "扩展程序公开名称"
+  },
+  "extensionDescription": {
+    "message": "选取屏幕上的任意颜色，复制 HEX、RGB 和 HSL 数值，并在此设备上保存本地历史记录。",
+    "description": "Chrome 应用商店简短说明"
+  }
+}
